@@ -21,7 +21,7 @@ EMP_BUILD_CONFIG(SelectionAnalyzeConfig,
         "tournament, 2 for elite, 3 for roulette."),
     VALUE(INPUT_FILENAME, std::string, "", "The path of the file containing the data to be used."),
     VALUE(OUTPUT_FILENAME, std::string, "", "The path to a file that will be created to save the "
-        "generated selection probabilities."),
+        "generated selection probabilities. (Leave blank for std::out)"),
     VALUE(NO_COL_HEADINGS, bool, false, "Set to true if column headers have already been "
         "removed."),
     VALUE(VERBOSE, bool, false, "Prints more information during computation, useful for debugging."),

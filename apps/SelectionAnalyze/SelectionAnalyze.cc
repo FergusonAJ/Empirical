@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     bool remove_headers = !config.NO_COL_HEADINGS();  
     if(verbose) std::cout << "Config loaded successfully!" << std::endl;
     
-    // Load in the data
+    // Check filenames
     if(input_filename.length() <= 0){
         std::cerr << "Error! No input filename set. INPUT_FILENAME must be set in the config!" 
             << std::endl;
@@ -152,7 +152,10 @@ int main(int argc, char* argv[]){
               fit_map[i] = fit_data[i];
             }
             for (size_t i = 0; i < num_orgs; i++) {
-              out_stream << fit_map.GetProb(i) << " ";
+              out_stream << fit_map.GetProb(i);
+              if(i != num_orgs - 1){
+                out_stream << ", ";
+              }
             }
             out_stream << std::endl;
         }
