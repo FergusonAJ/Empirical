@@ -19,8 +19,13 @@
 int main(int argc, char* argv[]){
     auto args = emp::cl::ArgManager(argc, argv);
     SelectionAnalyzeConfig config;
-    std::string config_filename = "config.cfg";
-    config.Read(config_filename);
+    std::string config_filename;
+    if(!args.UseArg("-CONFIG", config_filename, "Config filename")) 
+        config_filename = "config.cfg";
+    std::cout << "Loading config: " << config_filename << std::endl;
+    if(!config.Read(config_filename)){
+        std::cerr << "Unable to load file: " << config_filename << std::endl;
+    }
     if (args.ProcessConfigOptions(config, std::cout, config_filename, "config-macros.h") == false)
         exit(-1);
     if (args.TestUnknown() == false){
@@ -60,6 +65,7 @@ int main(int argc, char* argv[]){
             if(verbose) data.SetVerbose();
             bool do_subsampling = config.LEXICASE_DO_SUBSAMPLING();
             if(!do_subsampling){
+                if(verbose) std::cout << "Doing standard lexicase selection!" << std::endl;
                 // Calculate probabilities! (Full lexicase) 
                 data.AnalyzeLexicase();
                 data.CalcLexicaseProbs();
@@ -67,6 +73,7 @@ int main(int argc, char* argv[]){
             }
             else{
                 // Estimate probabilities! (Subsampled lexicase)
+                if(verbose) std::cout << "Doing subsampled lexicase selection!" << std::endl;
                 size_t sub_pop_count = config.LEXICASE_SUBSAMPLING_GROUP_SIZE();
                 if(!sub_pop_count) sub_pop_count = data.GetNumOrgs();
                 size_t sub_test_count = config.LEXICASE_SUBSAMPLING_TEST_COUNT();
@@ -96,6 +103,8 @@ int main(int argc, char* argv[]){
             // Load in tournament-specific configuration options
             size_t tourney_size = config.TOURNAMENT_SIZE();
             if(!tourney_size) tourney_size = data.GetNumOrgs(); 
+            if(verbose) std::cout << "Doing tournament (size = " << tourney_size << 
+                ") selection!" << std::endl;
             size_t tourney_trial_count = config.TOURNAMENT_TRIALS(); 
             // Tournament is just elite with a sampled population
             // Thus, tournamnet is just lexicase with one column and pop sampling!
@@ -118,6 +127,7 @@ int main(int argc, char* argv[]){
             if(verbose) std::cout << "Loading in file: "  << input_filename << std::endl;
             SelectionData data(input_filename, 0, remove_headers);
             if(verbose) data.SetVerbose();
+            if(verbose) std::cout << "Doing elite selection!" << std::endl;
             data.SetFitnessID(agg_fit_idx);
             
             // Elite is just lexicase on one column!
@@ -132,6 +142,7 @@ int main(int argc, char* argv[]){
             if(verbose) std::cout << "Loading in file: "  << input_filename << std::endl;
             SelectionData data(input_filename, 0, remove_headers);
             if(verbose) data.SetVerbose();
+            if(verbose) std::cout << "Doing roulette selection!" << std::endl;
             data.SetFitnessID(agg_fit_idx);
             //Calculate probabilities using roulette selection
             emp::vector<double> fit_data = data.GetFitData();
