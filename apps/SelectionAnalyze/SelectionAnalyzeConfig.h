@@ -44,14 +44,15 @@ EMP_BUILD_CONFIG(SelectionAnalyzeConfig,
         " doing lexicase selection. For cohort selection, this is cohort size. (a value of zero"
         " gives the whole population (such as in downsampled lexicase)."), 
     VALUE(LEXICASE_SUBSAMPLING_TEST_COUNT, size_t, 0, "Number of tests to sample before running "
-        " lexicase selection."),
+        " lexicase selection (0 for all)."),
     VALUE(LEXICASE_SUBSAMPLING_NUM_SAMPLES, size_t, 1000, "Number of times to sample the"
         " configuration. The larger the number, the closeer the value the closer the estimate should"
         " be to the true value."),    
+    
     // Tournament Settings
     GROUP(TOURNAMENT, "Settings that apply only to tournament selection (SELECTION_SCHEME = 1)."),
     VALUE(TOURNAMENT_SIZE, size_t, 0, "Number of organisms in each tournament."
         " (0 for whole population)"), 
-    VALUE(TOURNAMENT_TRIALS, size_t, 0, "Number of organisms in each tournament."
+    VALUE(TOURNAMENT_TRIALS, size_t, 1000, "Number of organisms in each tournament."
         " (0 for whole population)") 
 )

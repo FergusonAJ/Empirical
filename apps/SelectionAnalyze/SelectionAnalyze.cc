@@ -68,7 +68,9 @@ int main(int argc, char* argv[]){
             else{
                 // Estimate probabilities! (Subsampled lexicase)
                 size_t sub_pop_count = config.LEXICASE_SUBSAMPLING_GROUP_SIZE();
+                if(!sub_pop_count) sub_pop_count = data.GetNumOrgs();
                 size_t sub_test_count = config.LEXICASE_SUBSAMPLING_TEST_COUNT();
+                if(!sub_test_count) sub_test_count = data.GetNumCriteria();
                 size_t sub_trial_count = config.LEXICASE_SUBSAMPLING_NUM_SAMPLES();
                 emp::Random random;
                 auto result = data.CalcSubsampleLexicaseProbs(sub_pop_count, 
@@ -92,7 +94,8 @@ int main(int argc, char* argv[]){
             if(verbose) data.SetVerbose();
             data.SetFitnessID(agg_fit_idx);
             // Load in tournament-specific configuration options
-            size_t tourney_size = config.TOURNAMENT_SIZE(); 
+            size_t tourney_size = config.TOURNAMENT_SIZE();
+            if(!tourney_size) tourney_size = data.GetNumOrgs(); 
             size_t tourney_trial_count = config.TOURNAMENT_TRIALS(); 
             // Tournament is just elite with a sampled population
             // Thus, tournamnet is just lexicase with one column and pop sampling!
