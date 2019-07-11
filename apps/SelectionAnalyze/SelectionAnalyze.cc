@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
             if(!tourney_size) tourney_size = data.GetNumOrgs(); 
             if(verbose) std::cout << "Doing tournament (size = " << tourney_size << 
                 ") selection!" << std::endl;
-            size_t tourney_trial_count = config.TOURNAMENT_TRIALS(); 
+            size_t tourney_trial_count = config.TOURNAMENT_SAMPLES(); 
             // Tournament is just elite with a sampled population
             // Thus, tournamnet is just lexicase with one column and pop sampling!
             emp::Random random;
