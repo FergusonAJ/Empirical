@@ -1,0 +1,14 @@
+# Executables
+SelectionAnalyze
+test_gen
+
+# Configuration
+config.cfg
+
+# Directories
+input/
+output/
+scripts/
+
+# Misc.
+.Rhistory
