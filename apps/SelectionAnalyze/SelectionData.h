@@ -568,7 +568,7 @@ public:
     emp::vector<double> total_probs(GetNumOrgs(), 0.0);
     emp::vector<double> cur_probs;
     for (size_t test_id = 0; test_id < num_tests; test_id++) {
-      std::cout << "Running test #" << test_id << std::endl;
+      if (verbose) std::cout << "Running test #" << test_id << std::endl;
       Reset();
       SampleOrgs(orgs_used, random);
       SampleCriteria(fits_used, random);

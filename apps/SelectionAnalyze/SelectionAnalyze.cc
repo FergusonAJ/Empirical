@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
                   total += result[i];
                 }
                 out_stream << std::endl;
-                std::cout << "Total prob = " << total << std::endl;
+                if(verbose) std::cout << "Total prob = " << total << std::endl;
             }
         }
         break;
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
               total += result[i];
             }
             out_stream << std::endl;
-            std::cout << "Total prob = " << total << std::endl;
+            if(verbose) std::cout << "Total prob = " << total << std::endl;
         }
         break;
         case ELITE:{
