@@ -156,6 +156,49 @@ public:
 
     return true;
   }
+  
+  // Remove all fitnesses before the one specified.
+  bool SetStartFitnessID(size_t start_idx) {
+    if (start_idx >= fitness_chart.size()) return false;  // Illegal fitness ID chosen.
+    if (fitness_chart.size() == 1) return true;        // Only column, nothing to do.
+
+    // Shift the table over so specified column is now left-most
+    if(start_idx > 0){
+      for(size_t fit_id = 0; fit_id < fitness_chart.size() - start_idx; ++fit_id){
+        for (size_t org_id = 0; org_id < org_chart.size(); ++org_id) {
+          org_chart[org_id][fit_id] = org_chart[org_id][fit_id + start_idx];
+        }
+        fitness_chart[fit_id] = fitness_chart[fit_id + start_idx];
+      }
+    }
+    
+    //Trim the right side of the table by start_idx columns
+    for (size_t org_id = 0; org_id < org_chart.size(); ++org_id) {
+      org_chart[org_id].resize(fitness_chart.size() - start_idx);
+    }
+    fitness_chart.resize(fitness_chart.size() - start_idx);
+    
+    // Since this alteration is being done by the user, mark the new versions as "original".
+    orig_org_chart = org_chart;
+    orig_fitness_chart = fitness_chart;
+
+
+    for (size_t org_id = 0; org_id < org_chart.size(); ++org_id) {
+      for(size_t i = 0; i < org_chart[org_id].size(); ++i){
+        std::cout << org_chart[org_id][i] << " ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl << std::endl;
+    for(size_t fit_id = 0; fit_id < fitness_chart.size(); ++ fit_id){
+      for(size_t i = 0; i < fitness_chart[fit_id].size(); ++i){
+        std::cout << fitness_chart[fit_id][i] << " ";
+      }
+      std::cout << std::endl;
+    }
+
+    return true;
+  }
 
   /// Load a file with fitness data.
   /// * File is structed as a CSV using '#' for comments.

@@ -61,8 +61,9 @@ int main(int argc, char* argv[]){
             // Load lexicase-specific configuration options
             size_t start_idx = config.LEXICASE_START_IDX();
             if(verbose) std::cout << "Loading in file: "  << input_filename << std::endl;
-            SelectionData data(input_filename, start_idx, remove_headers);
+            SelectionData data(input_filename, 0, remove_headers);
             if(verbose) data.SetVerbose();
+            data.SetStartFitnessID(start_idx);
             bool do_subsampling = config.LEXICASE_DO_SUBSAMPLING();
             if(!do_subsampling){
                 if(verbose) std::cout << "Doing standard lexicase selection!" << std::endl;
