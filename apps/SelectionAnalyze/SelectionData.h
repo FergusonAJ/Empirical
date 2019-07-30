@@ -13,6 +13,7 @@
 #include <ostream>
 #include <string>
 #include <unordered_map>
+#include <cmath>
 
 #include "../../source/base/vector.h"
 #include "../../source/tools/BitVector.h"
@@ -69,7 +70,7 @@ private:
     org_info.resize(0);
     org_info.resize(GetNumOrgs());
     fit_info.resize(0);
-    fit_info.resize(GetNumOrgs());
+    fit_info.resize(GetNumCriteria());
   }
 
   /// Helper function to convert a set of org fitnesses to ranks.
@@ -181,21 +182,6 @@ public:
     // Since this alteration is being done by the user, mark the new versions as "original".
     orig_org_chart = org_chart;
     orig_fitness_chart = fitness_chart;
-
-
-    for (size_t org_id = 0; org_id < org_chart.size(); ++org_id) {
-      for(size_t i = 0; i < org_chart[org_id].size(); ++i){
-        std::cout << org_chart[org_id][i] << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl << std::endl;
-    for(size_t fit_id = 0; fit_id < fitness_chart.size(); ++ fit_id){
-      for(size_t i = 0; i < fitness_chart[fit_id].size(); ++i){
-        std::cout << fitness_chart[fit_id][i] << " ";
-      }
-      std::cout << std::endl;
-    }
 
     return true;
   }
@@ -312,14 +298,12 @@ public:
         // Both FALSE                                => No dominance
         // maybe_dom1 == true && maybe_dom2 == false => ORG1 dominates        
         // maybe_dom1 == false && maybe_dom2 == true => ORG2 dominates        
-
         if (maybe_dom1 == true && maybe_dom2 == true) {
           // This is a duplicate, so mark and remove org2 from additional consideration.
           org_info[org1_id].dup_ids.push_back(org2_id);
           is_active[org2_id] = false;
           progress++;
         }
-
         else if (maybe_dom1 == true && maybe_dom2 == false) {
           // Org 1 dominates org 2.  Mark org2 as dominated and inactive.
           is_active[org2_id] = false;
@@ -447,6 +431,7 @@ public:
                   << ";  criteria count = " << is_discrim.CountOnes()
                   << std::endl;
       }
+      if (verbose) std::cout << "orgs=" << is_active << " ; fits=" << is_discrim << std::endl;
 
       emp_assert(is_active.Any());
 
@@ -458,6 +443,7 @@ public:
                   << ";  criteria count = " << is_discrim.CountOnes()
                   << std::endl;
       }
+      if (verbose) std::cout << "orgs=" << is_active << " ; fits=" << is_discrim << std::endl;
 
       emp_assert(is_active.Any());
 
@@ -469,6 +455,7 @@ public:
                   << ";  criteria count = " << is_discrim.CountOnes()
                   << std::endl;
       }
+      if (verbose) std::cout << "orgs=" << is_active << " ; fits=" << is_discrim << std::endl;
 
       emp_assert(is_active.Any());
 
@@ -480,6 +467,7 @@ public:
                   << ";  criteria count = " << is_discrim.CountOnes()
                   << std::endl;
       }
+      if (verbose) std::cout << "orgs=" << is_active << " ; fits=" << is_discrim << std::endl;
 
       emp_assert(is_active.Any());
     }
@@ -494,7 +482,9 @@ public:
     // Look up this set of organisms in the cache and return if found.  Keep a referece to the probailties
     // so that it will be automatically updated in the cache for next time we need it.
     emp::vector<double> & out_probs = prob_cache[orgs];
-    if (out_probs.size()) return out_probs;
+    if (out_probs.size()){ 
+      return out_probs;
+    }
 
     // We haven't cached out_probs, so calculate it now; inititalize all probs to zero.
     out_probs.resize(orgs.GetSize(), 0.0);
@@ -603,7 +593,22 @@ public:
     for (size_t fit_id : remove_ids) {
       is_discrim[fit_id] = false;
     }
+  }
 
+  void ActivateOrgs(emp::vector<size_t> idx_vec, size_t group_size, size_t group_id){
+    is_active.Clear();
+    for(size_t i = 0; i < group_size; ++i){
+      emp_assert(idx_vec[group_size * group_id + i] < is_active.size());
+      is_active[idx_vec[group_size * group_id + i]] = true;
+    }
+  }
+  
+  void ActivateCriteria(emp::vector<size_t> idx_vec, size_t group_size, size_t group_id){
+    is_discrim.Clear();
+    for(size_t i = 0; i < group_size; ++i){
+      emp_assert(idx_vec[group_size * group_id + i] < is_discrim.size());
+      is_discrim[idx_vec[group_size * group_id + i]] = true;
+    }
   }
 
   emp::vector<double> CalcSubsampleLexicaseProbs(size_t orgs_used, size_t fits_used,
@@ -629,6 +634,65 @@ public:
       if (verbose) std::cout << std::endl << std::endl;
     }
 
+    // Convert the totals into an average and return the vector.
+    for (double & x : total_probs) x /= (double) num_tests;
+    return total_probs;
+  }
+  
+  emp::vector<double> CalcSubsampleLexicaseGenerationProbs(size_t orgs_used, size_t fits_used,
+                                                 size_t num_tests, emp::Random & random,
+                                                 bool single_test_sample=true) {
+    emp::vector<double> total_probs(GetNumOrgs(), 0.0);
+        emp::vector<double> cur_group_probs, cur_test_probs;
+    emp::vector<size_t> org_ids(GetNumOrgs(), 0);
+    for(size_t i = 0; i < org_ids.size(); ++i) 
+        org_ids[i] = i;
+    emp::vector<size_t> test_ids(GetNumCriteria(), 0);
+    for(size_t i = 0; i < test_ids.size(); ++i)
+        test_ids[i] = i; 
+    emp_assert(GetNumOrgs() % orgs_used == 0);
+    size_t num_groups = GetNumOrgs() / orgs_used;
+
+    for (size_t test_id = 0; test_id < num_tests; test_id++) {
+      cur_test_probs.resize(0);
+      cur_test_probs.resize(GetNumOrgs());
+      if (verbose) std::cout << "Running test #" << test_id << std::endl;
+      Reset();
+      emp::Shuffle(random, test_ids);
+      emp::Shuffle(random, org_ids);
+      if(single_test_sample)
+        SampleCriteria(fits_used, random);
+      for(size_t group_id = 0; group_id < num_groups; ++group_id){
+        cur_group_probs.resize(0);
+        cur_group_probs.resize(GetNumOrgs());
+        ActivateOrgs(org_ids, orgs_used, group_id);
+        if(!single_test_sample)
+          ActivateCriteria(test_ids, fits_used, group_id);
+        if (verbose) std::cout << "Group " << group_id << ", orgs=" << is_active << 
+            " ; fits=" << is_discrim << std::endl;
+        emp_assert(is_active.Any());
+        emp_assert(is_discrim.Any());
+        AnalyzeLexicase(false);      // Run an analysis, but do not reset the population (to keep sample).
+        emp_assert(is_active.Any());
+        CalcLexicaseProbs();
+        cur_group_probs = GetSelectProbs();
+        for (size_t i = 0; i < GetNumOrgs(); i++) {
+          if (verbose) std::cout << cur_group_probs[i] << " ";
+          cur_test_probs[i] += cur_group_probs[i];
+        }
+        if (verbose) std::cout << std::endl;
+      }
+      cur_test_probs = GetSelectProbs();
+      if (verbose) std::cout << "Test Totals: " << orgs_used  << std::endl;
+      for (size_t i = 0; i < GetNumOrgs(); i++) {
+        if (verbose) std::cout << cur_test_probs[i] << " ";
+        if (verbose) std::cout << "(" << 
+            1.0 -std::pow(1.0 - cur_test_probs[i], (double)orgs_used) << ") ";
+        total_probs[i] += 1.0 - std::pow(1.0 - cur_test_probs[i], (double)orgs_used);
+      }
+      if (verbose) std::cout << std::endl;
+    }
+        
     // Convert the totals into an average and return the vector.
     for (double & x : total_probs) x /= (double) num_tests;
     return total_probs;

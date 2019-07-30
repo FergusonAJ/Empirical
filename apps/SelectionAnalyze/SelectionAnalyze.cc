@@ -4,6 +4,8 @@
 //
 //  Analyze probabilities for selection using various selection techniques.
 
+#include <cmath>
+
 // Empirical Includes
 #include "config/config.h"
 #include "config/ArgManager.h"
@@ -39,6 +41,10 @@ int main(int argc, char* argv[]){
     std::string output_filename = config.OUTPUT_FILENAME(); 
     bool verbose = config.VERBOSE(); 
     bool remove_headers = !config.NO_COL_HEADINGS();  
+    // do_generation_prob forces the program to output the probability of each organism being 
+    //  selected *at least once* for the next generation
+    // If !do_generation_prob, just return the probability for each org for a single selection event
+    bool do_generation_prob = config.DO_GENERATIONAL_PROBABILITY();
     if(verbose) std::cout << "Config loaded successfully!" << std::endl;
     
     // Check filenames
@@ -70,7 +76,18 @@ int main(int argc, char* argv[]){
                 // Calculate probabilities! (Full lexicase) 
                 data.AnalyzeLexicase();
                 data.CalcLexicaseProbs();
-                data.PrintSelectProbs(out_stream, false);  
+                if(!do_generation_prob){
+                    data.PrintSelectProbs(out_stream, false);  
+                }
+                else{  // If doing generation prob, use the formula 1 - (1 - p)^N
+                  emp::vector<double> result = data.GetSelectProbs();
+                  size_t num_orgs = data.GetNumOrgs();
+                    for (size_t i = 0; i < result.size(); i++) {
+                      if (i) out_stream << ',';
+                      out_stream << 1.0 - (std::pow(1 - result[i],  num_orgs));
+                    }
+                    out_stream << std::endl;
+                }
             }
             else{
                 // Estimate probabilities! (Subsampled lexicase)
@@ -81,16 +98,29 @@ int main(int argc, char* argv[]){
                 if(!sub_test_count) sub_test_count = data.GetNumCriteria();
                 size_t sub_trial_count = config.LEXICASE_SUBSAMPLING_NUM_SAMPLES();
                 emp::Random random;
-                auto result = data.CalcSubsampleLexicaseProbs(sub_pop_count, 
-                    sub_test_count, sub_trial_count, random);
-                double total = 0.0;
-                for (size_t i = 0; i < result.size(); i++) {
-                  if (i) out_stream << ',';
-                  out_stream << result[i];
-                  total += result[i];
+                if(!do_generation_prob){
+                    auto result = data.CalcSubsampleLexicaseProbs(sub_pop_count, 
+                        sub_test_count, sub_trial_count, random);
+                    double total = 0.0;
+                    for (size_t i = 0; i < result.size(); i++) {
+                      if (i) out_stream << ',';
+                      out_stream << result[i];
+                      total += result[i];
+                    }
+                    out_stream << std::endl;
+                    if(verbose) std::cout << "Total prob = " << total << std::endl;
                 }
-                out_stream << std::endl;
-                if(verbose) std::cout << "Total prob = " << total << std::endl;
+                else{
+                    //This is different from generational probs. for other selection schemes
+                    bool do_single_test_sample = config.LEXICASE_SINGLE_TEST_SAMPLE();
+                    auto result = data.CalcSubsampleLexicaseGenerationProbs(sub_pop_count, 
+                        sub_test_count, sub_trial_count, random, do_single_test_sample);
+                    for (size_t i = 0; i < result.size(); i++) {
+                      if (i) out_stream << ',';
+                      out_stream << result[i];
+                    }
+                    out_stream << std::endl;
+                }
             }
         }
         break;
@@ -112,14 +142,24 @@ int main(int argc, char* argv[]){
             emp::Random random;
             auto result = data.CalcSubsampleLexicaseProbs(tourney_size,
                  data.GetNumCriteria(), tourney_trial_count, random);
-            double total = 0.0;
-            for (size_t i = 0; i < result.size(); i++) {
-              if (i) out_stream << ',';
-              out_stream << result[i];
-              total += result[i];
+            if(!do_generation_prob){
+                double total = 0.0;
+                for (size_t i = 0; i < result.size(); i++) {
+                  if (i) out_stream << ',';
+                  out_stream << result[i];
+                  total += result[i];
+                }
+                out_stream << std::endl;
+                if(verbose) std::cout << "Total prob = " << total << std::endl;
             }
-            out_stream << std::endl;
-            if(verbose) std::cout << "Total prob = " << total << std::endl;
+            else{  // If doing generation prob, use the formula 1 - (1 - p)^N
+              size_t num_orgs = data.GetNumOrgs();
+                for (size_t i = 0; i < result.size(); i++) {
+                  if (i) out_stream << ',';
+                  out_stream << 1.0 - (std::pow(1 - result[i], num_orgs));
+                }
+                out_stream << std::endl;
+            }
         }
         break;
         case ELITE:{
@@ -134,7 +174,18 @@ int main(int argc, char* argv[]){
             // Elite is just lexicase on one column!
             data.AnalyzeLexicase();
             data.CalcLexicaseProbs();
-            data.PrintSelectProbs(out_stream, false);  
+            if(!do_generation_prob){
+              data.PrintSelectProbs(out_stream, false);  
+            }
+            else{  // If doing generation prob, use the formula 1 - (1 - p)^N
+              emp::vector<double> result = data.GetSelectProbs();
+              size_t num_orgs = data.GetNumOrgs();
+                for (size_t i = 0; i < result.size(); i++) {
+                  if (i) out_stream << ',';
+                  out_stream << 1.0 - (std::pow(1 - result[i],  num_orgs));
+                }
+                out_stream << std::endl;
+            }
         }
         break;
         case ROULETTE:{
@@ -152,13 +203,22 @@ int main(int argc, char* argv[]){
             for (size_t i = 0; i < num_orgs; i++) {
               fit_map[i] = fit_data[i];
             }
-            for (size_t i = 0; i < num_orgs; i++) {
-              out_stream << fit_map.GetProb(i);
-              if(i != num_orgs - 1){
-                out_stream << ", ";
-              }
+            if(!do_generation_prob){            
+                for (size_t i = 0; i < num_orgs; i++) {
+                  out_stream << fit_map.GetProb(i);
+                  if(i != num_orgs - 1){
+                    out_stream << ", ";
+                  }
+                }
+                out_stream << std::endl;
             }
-            out_stream << std::endl;
+            else{  // If doing generation prob, use the formula 1 - (1 - p)^N
+                for (size_t i = 0; i < num_orgs; i++) {
+                  if (i) out_stream << ',';
+                  out_stream << 1.0 - (std::pow(1 - fit_map.GetProb(i),  num_orgs));
+                }
+                out_stream << std::endl;
+            }
         }
         break;
     }

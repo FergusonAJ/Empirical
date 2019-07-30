@@ -19,6 +19,9 @@ EMP_BUILD_CONFIG(SelectionAnalyzeConfig,
     GROUP(GENERAL, "General settings that apply to all selection schemes"),
     VALUE(SELECTION_SCHEME, size_t, 0, "The type of selection to be analyzed. 0 for lexicase, 1 for "
         "tournament, 2 for elite, 3 for roulette."),
+    VALUE(DO_GENERATIONAL_PROBABILITY, bool, false, "If 0, compute the probability for a single "
+        "selection event (this clashes with Cohort Lexicase). If 1, compute the probability of "
+        "each organism being selected *at least once* for the next generation."),
     VALUE(INPUT_FILENAME, std::string, "", "The path of the file containing the data to be used."),
     VALUE(OUTPUT_FILENAME, std::string, "", "The path to a file that will be created to save the "
         "generated selection probabilities. (Leave blank for std::out)"),
@@ -40,6 +43,8 @@ EMP_BUILD_CONFIG(SelectionAnalyzeConfig,
         "case columns."), 
     VALUE(LEXICASE_DO_SUBSAMPLING, bool, false, "If 1, LEXICASE_POP_SAMPLING, LEXICASE_TEST_SAMPLING"
         " and LEXICASE_SUBSAMPLING_SAMPLES will be used. Note: this is an estimated analysis."),
+    VALUE(LEXICASE_SINGLE_TEST_SAMPLE, bool, true, "If 1, test cases will only be subsampled once "
+        " for each generation. If 0, they will be subsampled the same number of times as the orgs"),
     VALUE(LEXICASE_SUBSAMPLING_GROUP_SIZE, size_t, 0, "How many individuals will be sampled before"
         " doing lexicase selection. For cohort selection, this is cohort size. (a value of zero"
         " gives the whole population (such as in downsampled lexicase)."), 
