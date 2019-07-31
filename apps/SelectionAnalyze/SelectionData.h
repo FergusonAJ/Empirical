@@ -662,12 +662,16 @@ public:
       emp::Shuffle(random, org_ids);
       if(single_test_sample)
         SampleCriteria(fits_used, random);
+      emp::BitVector orig_tests(is_discrim); // Make a copy
       for(size_t group_id = 0; group_id < num_groups; ++group_id){
+        Reset();
         cur_group_probs.resize(0);
         cur_group_probs.resize(GetNumOrgs());
         ActivateOrgs(org_ids, orgs_used, group_id);
         if(!single_test_sample)
           ActivateCriteria(test_ids, fits_used, group_id);
+        else
+          is_discrim = orig_tests; 
         if (verbose) std::cout << "Group " << group_id << ", orgs=" << is_active << 
             " ; fits=" << is_discrim << std::endl;
         emp_assert(is_active.Any());
@@ -682,7 +686,7 @@ public:
         }
         if (verbose) std::cout << std::endl;
       }
-      cur_test_probs = GetSelectProbs();
+      //cur_test_probs = GetSelectProbs();
       if (verbose) std::cout << "Test Totals: " << orgs_used  << std::endl;
       for (size_t i = 0; i < GetNumOrgs(); i++) {
         if (verbose) std::cout << cur_test_probs[i] << " ";
