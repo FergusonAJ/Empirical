@@ -170,6 +170,25 @@ namespace emp {
     }
 
     bool Has(SignalKey key) const { return emp::Has(link_key_map, key); }
+
+    /// Check if given argument types are acceptable for this signal
+    template <typename... ARGS>
+    bool CheckArgTypes(){
+      emp::vector<TypeID> arg_types = GetTypeIDs<ARGS...>();
+      emp_assert(arg_type_ids.size() == arg_types.size(), 
+          "BaseTrigger passed incorrect number of arguments. Expected: " +  
+          emp::to_string(arg_type_ids.size()) +  
+          "; Passed: " + emp::to_string(arg_types.size()));
+      for(size_t type_idx = 0; type_idx < arg_type_ids.size(); ++type_idx){
+        if(arg_type_ids[type_idx] == arg_types[type_idx]) continue;
+        if(arg_type_ids[type_idx] == arg_types[type_idx].GetRemoveReferenceTypeID()) continue;
+        emp_assert(arg_type_ids[type_idx] == arg_types[type_idx], 
+            "Arguments in position " +  emp::to_string(type_idx) +  
+            " do not match. Expected: " + arg_type_ids[type_idx].GetName() + 
+            "; Passed: " +  arg_types[type_idx].GetName());
+      }
+      return true;
+    }
   };
 
   /// Generic version of Signals; needs specialization to a function type..
@@ -377,47 +396,24 @@ namespace emp {
 
   template<typename... ARGS>
   inline void SignalBase::BaseTrigger(ARGS... args) {
-    // Make sure this base class is really of the correct derrived type (but do so in an
-    // assert since triggers may be called frequently and should be fast!)
-    emp::vector<TypeID> arg_types = GetTypeIDs<ARGS...>();
-    emp_assert(arg_type_ids.size() == arg_types.size(), 
-        "BaseTrigger passed incorrect number of arguments. Expected: ", arg_type_ids.size(), 
-        "; Passed: ", arg_types.size());
-    for(size_t type_idx = 0; type_idx < arg_type_ids.size(); ++type_idx){
-      if(arg_type_ids[type_idx] == arg_types[type_idx]) continue;
-      if(arg_type_ids[type_idx] == arg_types[type_idx].GetRemoveReferenceTypeID()) continue;
-      emp_assert(arg_type_ids[type_idx] == arg_types[type_idx], "Arguments in position", type_idx, 
-          "do not match. Expected: ", arg_type_ids[type_idx].GetName(), 
-          "; Passed: ", arg_types[type_idx].GetName());
-    }
+    // Check argument types to ensure they are compatible with the derived signal type
+    // Only do this in debug mode since triggers need to be fast!
+    emp_assert(CheckArgTypes<ARGS...>(), "Incompatible argument types passed to BaseSignal.BaseTrigger");
     ((Signal<void(ARGS...)> *) this)->Trigger(args...);
-    //((Signal<void(ARGS...)> *) this)->Trigger(std::forward<ARGS>(args));
   }
   
   template<typename RETURN, typename... ARGS>
   inline typename Signal<RETURN(ARGS...)>::return_t SignalBase::BaseTrigger(ARGS... args) {
     typedef typename Signal<RETURN(ARGS...)>::return_base_t  return_base_t;
-    // Make sure this base class is really of the correct derrived type (but do so in an
-    // assert since triggers may be called frequently and should be fast!)
-    TypeID return_type = GetTypeID<RETURN>();
-    emp::vector<TypeID> arg_types = GetTypeIDs<ARGS...>();
-    emp_assert(return_type_id == return_type, "Incorrect type expected of BaseTrigger.",  
-          "Expected: ", return_type_id.GetName(), 
-          "; Passed: ", return_type.GetName());
-    emp_assert(arg_type_ids.size() == arg_types.size(), 
-        "BaseTrigger passed incorrect number of arguments. Expected: ", arg_type_ids.size(), 
-        "; Passed: ", arg_types.size());
-    //TODO: Write a function that returns a boolean to do this check and assert a call to it
-    for(size_t type_idx = 0; type_idx < arg_type_ids.size(); ++type_idx){
-      if(arg_type_ids[type_idx] == arg_types[type_idx]) continue;
-      if(arg_type_ids[type_idx] == arg_types[type_idx].GetRemoveReferenceTypeID()) continue;
-      emp_assert(arg_type_ids[type_idx] == arg_types[type_idx], "Arguments in position", type_idx, 
-          "do not match. Expected: ", arg_type_ids[type_idx].GetName(), 
-          "; Passed: ", arg_types[type_idx].GetName());
-    }
-    //emp_assert(dynamic_cast< Signal<return_base_t(ARGS...)> * >(this));
-    auto ptr = (Signal<return_base_t(ARGS...)> *)this;
-    return ptr->Trigger(args...);
+    // Ensure the types (return + arguments) passed are compatible with the underlying derived signal
+    // Only do this in debug mode since triggers need to be fast!
+    // Check return type 
+    emp_assert(return_type_id == GetTypeID<RETURN>(), 
+          "Incorrect return type passed to BaseTrigger. Expected: " + return_type_id.GetName() + 
+          "; Passed: " + GetTypeID<RETURN>().GetName());
+    // Check argument types
+    emp_assert(CheckArgTypes<ARGS...>(), "Incompatible argument types passed to BaseSignal.BaseTrigger");
+    ((Signal<return_base_t(ARGS...)> *)this)->Trigger(args...);
   }
 
   template <typename... ARGS>
