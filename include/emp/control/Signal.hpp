@@ -19,6 +19,7 @@
 #include <string>
 
 #include "../meta/TypePack.hpp"
+#include "../meta/TypeID.hpp"
 #include "../functional/FunctionSet.hpp"
 #include "../datastructs/map_utils.hpp"
 
@@ -78,6 +79,12 @@ namespace emp {
   // Forward declarations.
   class SignalBase;     // ...for pointers to signals.
   class SignalManager;  // ...for setting up as friend.
+  template<typename... ARGS> 
+  class Signal;         // ...for access to return type
+  template<typename... ARGS> 
+  class Signal<void(ARGS...)>;    // ...for access to return type
+  template<typename RETURN, typename... ARGS> 
+  class Signal<RETURN(ARGS...)>;  // ...for access to return type
 
   // Mechanisms for Signals to report to a manager.
   namespace internal {
@@ -105,13 +112,17 @@ namespace emp {
     std::map<SignalKey, size_t> link_key_map;  ///< Map unique link keys to link index for actions.
     emp::vector<man_t *> managers;             ///< What manager is handling this signal?
     man_t * prime_manager;                     ///< Which manager leads deletion? (nullptr for self)
+    emp::vector<emp::TypeID> arg_type_ids;     ///< What argument types does this signal expect? 
+    emp::TypeID return_type_id;                ///< What type does this signal return?
 
     // Helper Functions
     SignalKey NextSignalKey() { return SignalKey(signal_id,++next_link_id); }
 
     // SignalBase should only be constructable from derrived classes.
-    SignalBase(const std::string & n, internal::SignalManager_Base * manager=nullptr)
-    : name(n), signal_id(0), next_link_id(0), link_key_map(), managers(), prime_manager(nullptr)
+    SignalBase(const std::string & n, internal::SignalManager_Base * manager=nullptr, 
+        TypeID return_type = GetTypeID<void>(), emp::vector<TypeID> arg_types = {})
+    : name(n), signal_id(0), next_link_id(0), link_key_map(), managers(), prime_manager(nullptr), 
+         arg_type_ids(arg_types), return_type_id(return_type)
     {
       if (manager) manager->NotifyConstruct(this);
     }
@@ -131,10 +142,13 @@ namespace emp {
     virtual size_t GetNumArgs() const = 0;
     virtual size_t GetNumActions() const = 0;
 
-    // NOTE: If a Trigger is called on a base class, convert the signal assuming that the args
-    // map to the correct types (defined below with a dynamic cast to ensure correctness)
+    /// Triggers the signal by dynamic-casting to the correct derived class. Type checks in debug mode.
     template <typename... ARGS>
     void BaseTrigger(ARGS... args);
+    
+    /// Triggers the signal by dynamic-casting to the correct derived class. Type checks in debug mode. Returns a vector of results (one element from each action)
+    template <typename RETURN, typename... ARGS>
+    typename Signal<RETURN(ARGS...)>::return_t BaseTrigger(ARGS... args);
 
     /// Actions without arguments or a return type can be associated with any signal.
     template <typename... ARGS>
@@ -165,15 +179,17 @@ namespace emp {
   template <typename... ARGS>
   class Signal<void(ARGS...)> : public SignalBase {
   protected:
-    FunctionSet<void(ARGS...)> actions;  ///< Set of functions (actions) to be triggered with this signal.
+    FunctionSet<void(ARGS...)> actions;  ///< Set of functions (actions) to be triggered with this signal
   public:
     using fun_t = void(ARGS...);
     using this_t = Signal<fun_t>;
+    using return_t = void;      // Triggering this signal returns void
+    using return_base_t = void; // Each action returns void
 
     Signal(const std::string & name="", internal::SignalManager_Base * manager=nullptr)
-      : SignalBase(name, manager), actions() { ; }
+      : SignalBase(name, manager, GetTypeID<void>(), GetTypeIDs<ARGS...>()), actions(){ ; }
     Signal(const std::string & name, internal::SignalControl_Base & control)
-      : this_t(name, &(control.GetSignalManager())) { ; }
+      : this_t(name, &(control.GetSignalManager()))  { ; }
     virtual this_t * Clone() const {
       this_t * new_copy = new this_t(name);
       // @CAO: Make sure to copy over actions into new copy.
@@ -269,11 +285,13 @@ namespace emp {
   public:
     using fun_t = RETURN(ARGS...);
     using this_t = Signal<fun_t>;
+    using return_t = emp::vector<RETURN>; // Triggering this signal returns a vector of RETURN
+    using return_base_t = RETURN;         // Each individual action returns a single RETURN
 
     Signal(const std::string & name="", internal::SignalManager_Base * manager=nullptr)
-      : SignalBase(name, manager) { ; }
+      : SignalBase(name, manager, GetTypeID<RETURN>(), GetTypeIDs<ARGS...>()){ ; }
     Signal(const std::string & name, internal::SignalControl_Base & control)
-      : this_t(name, &(control.GetSignalManager())) { ; }
+      : this_t(name, &(control.GetSignalManager()))  { ; }
     virtual this_t * Clone() const {
       this_t * new_copy = new this_t(name);
       // @CAO: Make sure to copy over actions into new copy.
@@ -283,7 +301,7 @@ namespace emp {
     size_t GetNumArgs() const { return sizeof...(ARGS); }
     size_t GetNumActions() const { return actions.GetSize(); }
 
-    const emp::vector<RETURN> & Trigger(ARGS... args) { return actions.Run(args...); }
+    const return_t & Trigger(ARGS... args) { return actions.Run(args...); } 
 
     // Add an action that takes the proper arguments.
     SignalKey AddAction(const std::function<fun_t> & in_fun) {
@@ -361,8 +379,45 @@ namespace emp {
   inline void SignalBase::BaseTrigger(ARGS... args) {
     // Make sure this base class is really of the correct derrived type (but do so in an
     // assert since triggers may be called frequently and should be fast!)
-    emp_assert(dynamic_cast< Signal<void(ARGS...)> * >(this));
+    emp::vector<TypeID> arg_types = GetTypeIDs<ARGS...>();
+    emp_assert(arg_type_ids.size() == arg_types.size(), 
+        "BaseTrigger passed incorrect number of arguments. Expected: ", arg_type_ids.size(), 
+        "; Passed: ", arg_types.size());
+    for(size_t type_idx = 0; type_idx < arg_type_ids.size(); ++type_idx){
+      if(arg_type_ids[type_idx] == arg_types[type_idx]) continue;
+      if(arg_type_ids[type_idx] == arg_types[type_idx].GetRemoveReferenceTypeID()) continue;
+      emp_assert(arg_type_ids[type_idx] == arg_types[type_idx], "Arguments in position", type_idx, 
+          "do not match. Expected: ", arg_type_ids[type_idx].GetName(), 
+          "; Passed: ", arg_types[type_idx].GetName());
+    }
     ((Signal<void(ARGS...)> *) this)->Trigger(args...);
+    //((Signal<void(ARGS...)> *) this)->Trigger(std::forward<ARGS>(args));
+  }
+  
+  template<typename RETURN, typename... ARGS>
+  inline typename Signal<RETURN(ARGS...)>::return_t SignalBase::BaseTrigger(ARGS... args) {
+    typedef typename Signal<RETURN(ARGS...)>::return_base_t  return_base_t;
+    // Make sure this base class is really of the correct derrived type (but do so in an
+    // assert since triggers may be called frequently and should be fast!)
+    TypeID return_type = GetTypeID<RETURN>();
+    emp::vector<TypeID> arg_types = GetTypeIDs<ARGS...>();
+    emp_assert(return_type_id == return_type, "Incorrect type expected of BaseTrigger.",  
+          "Expected: ", return_type_id.GetName(), 
+          "; Passed: ", return_type.GetName());
+    emp_assert(arg_type_ids.size() == arg_types.size(), 
+        "BaseTrigger passed incorrect number of arguments. Expected: ", arg_type_ids.size(), 
+        "; Passed: ", arg_types.size());
+    //TODO: Write a function that returns a boolean to do this check and assert a call to it
+    for(size_t type_idx = 0; type_idx < arg_type_ids.size(); ++type_idx){
+      if(arg_type_ids[type_idx] == arg_types[type_idx]) continue;
+      if(arg_type_ids[type_idx] == arg_types[type_idx].GetRemoveReferenceTypeID()) continue;
+      emp_assert(arg_type_ids[type_idx] == arg_types[type_idx], "Arguments in position", type_idx, 
+          "do not match. Expected: ", arg_type_ids[type_idx].GetName(), 
+          "; Passed: ", arg_types[type_idx].GetName());
+    }
+    //emp_assert(dynamic_cast< Signal<return_base_t(ARGS...)> * >(this));
+    auto ptr = (Signal<return_base_t(ARGS...)> *)this;
+    return ptr->Trigger(args...);
   }
 
   template <typename... ARGS>

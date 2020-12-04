@@ -75,14 +75,16 @@ namespace emp {
     auto Link(SignalBase & s, ActionBase & a) { return s.AddAction(a); }
 
 
-    template <typename... ARGS>
-    void Trigger(const std::string & name, ARGS &&... args) {
+    template<typename RETURN, typename... ARGS>
+    typename Signal<RETURN(ARGS...)>::return_t Trigger(const std::string & name, ARGS ... args) {
       auto & base_signal = signal_m[name];
-      auto * signal = dynamic_cast< Signal<void(ARGS...)>* >(&base_signal);
-      emp_assert( signal != nullptr && "invalid signal conversion!" );
-      signal->Trigger(std::forward<ARGS>(args)...);
+      return base_signal.BaseTrigger<RETURN, ARGS...>(std::forward<ARGS>(args)...);
     }
-
+    template<typename... ARGS>
+    typename Signal<void(ARGS...)>::return_t Trigger(const std::string & name, ARGS ... args) {
+      auto & base_signal = signal_m[name];
+      base_signal.BaseTrigger<void, ARGS...>(std::forward<ARGS>(args)...);
+    }
 
     void NotifyConstruct(SignalBase * sig_ptr) override { signal_m.NotifyConstruct(sig_ptr); }
 
