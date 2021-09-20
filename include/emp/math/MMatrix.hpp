@@ -17,70 +17,27 @@
 
 
 #include "../base/vector.hpp"
+#include "../datastructs/Matrix.hpp"
 #include "./MVector.hpp"
 #include <cmath>
 
 
 namespace emp{
-  class MMatrix{
-    private: 
-      emp::vector<MVector> data;
-      size_t n_cols;
-      size_t n_rows;
+  class MMatrix : public Matrix<double>{
+    //private: 
+    //  emp::vector<MVector> data;
     public:
      
-      // Constructors
-      MMatrix()
-          : data(), n_cols(0), n_rows(0){;}
-      MMatrix(size_t rows, size_t cols)
-          : data(rows * cols), n_cols(cols), n_rows(rows){
-        for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
-          MVector v(cols);
-          data.push_back(v);
-        }
-      } 
-      MMatrix(size_t rows, size_t cols, std::initializer_list<double> val_list) 
-          : data(rows * cols), n_cols(cols), n_rows(rows){
-        emp_assert(val_list.size() == rows * cols, "Matrix declared as size ", rows, "x", cols,
-            " but passed initializer list of size", val_list.size());
-        emp::vector<double> val_vec(val_list);
-        for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
-          MVector v(cols);
-          for(size_t col_idx = 0; col_idx < n_cols; ++col_idx){
-            v[col_idx] = val_vec[row_idx * n_cols + col_idx];
-          }
-          data.push_back(v);
-        }
-      }
-      MMatrix(size_t rows, size_t cols, const emp::vector<double>& in_vec) 
-          : data(rows * cols), n_cols(cols), n_rows(rows){
-        emp_assert(in_vec.size() == rows * cols, "Matrix declared as size ", rows, "x", cols,
-            " but passed initializer list of size", in_vec.size());
-        for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
-          MVector v(cols);
-          for(size_t col_idx = 0; col_idx < n_cols; ++col_idx){
-            v[col_idx] = in_vec[row_idx * n_cols + col_idx];
-          }
-          data.push_back(v);
-        }
-      }
+      //// Constructors
+      MMatrix() = delete;
+      MMatrix(size_t rows, size_t cols) : Matrix(rows, cols) { ; }
+      MMatrix(size_t rows, size_t cols, std::initializer_list<double> val_list)
+       : Matrix(rows, cols, val_list) { ; } 
+      MMatrix(size_t rows, size_t cols, const emp::vector<double>& in_vec)
+       : Matrix(rows, cols, in_vec) { ; } 
 
-      // Getter
-      double Get(size_t row_idx, size_t col_idx) const{
-        emp_assert(row_idx < n_rows);
-        emp_assert(col_idx < n_cols);
-        return data[row_idx][col_idx];
-      }
-      // Setter
-      void Set(size_t row_idx, size_t col_idx, double val){
-        emp_assert(row_idx < n_rows);
-        emp_assert(col_idx < n_cols);
-        data[row_idx][col_idx] = val;
-      }
-      size_t num_rows() const { return n_rows; }
-      size_t num_cols() const { return n_cols; }
       MVector GetRow(size_t row_idx) const{
-        return data[row_idx];
+        return MVector(data[row_idx]);
       }
       MVector GetCol(size_t col_idx) const{
         MVector res(n_rows); 
@@ -169,15 +126,6 @@ namespace emp{
         return res;
       }
 
-      MMatrix Transposed(){
-        MMatrix res(n_rows, n_cols);
-        for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
-          for(size_t col_idx = 0; col_idx < n_cols; ++col_idx){
-            res.Set(col_idx, row_idx, Get(row_idx, col_idx));
-          }
-        }
-        return res;
-      }
       double Determinant(){
         emp_assert(n_rows == n_cols, "Can only calculate deterimant of square matrices");
         // Base case: 1x1 matrix -> return the only value
@@ -215,20 +163,6 @@ namespace emp{
   };
   
   // Misc. functions
-  std::ostream & operator<<(std::ostream & out, const emp::MMatrix & M) {
-    for(size_t row_idx = 0; row_idx < M.num_rows(); ++row_idx){
-      out << "| ";
-      for(size_t col_idx = 0; col_idx < M.num_cols(); ++col_idx){
-        if(col_idx == 0)
-          out << M.Get(row_idx, col_idx);
-        else
-          out << " " << M.Get(row_idx,col_idx);
-        
-      }
-      out << " |" << std::endl;
-    }
-    return out;
-  }
   MMatrix operator*(double scale_factor, emp::MMatrix& M){
     return M * scale_factor;
   }
@@ -240,7 +174,6 @@ namespace emp{
     }
     return res;
   }
-  
 }
 
 

@@ -19,7 +19,7 @@
 namespace emp{
   template <typename T>
   class Matrix{
-    private: 
+    protected: 
       emp::vector<emp::vector<T>> data;
       size_t n_cols;
       size_t n_rows;
@@ -27,7 +27,7 @@ namespace emp{
       // Constructors
       Matrix() = delete;
       Matrix(size_t rows, size_t cols)
-          : n_cols(cols), n_rows(rows){
+          : data(), n_cols(cols), n_rows(rows){
             T default_val = { };
         for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
           emp::vector<T> v(cols, default_val);
@@ -35,14 +35,14 @@ namespace emp{
         }
       } 
       Matrix(size_t rows, size_t cols, T default_val)
-          : n_cols(cols), n_rows(rows){
+          : data(), n_cols(cols), n_rows(rows){
         for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
           emp::vector<T> v(cols, default_val);
           data.push_back(v);
         }
       } 
       Matrix(size_t rows, size_t cols, std::initializer_list<T> val_list) 
-          : n_cols(cols), n_rows(rows){
+          : data(), n_cols(cols), n_rows(rows){
         emp_assert(val_list.size() == rows * cols, "Matrix declared as size ", rows, "x", cols,
             " but passed initializer list of size", val_list.size());
         emp::vector<T> val_vec(val_list);
@@ -55,7 +55,8 @@ namespace emp{
         }
       }
       Matrix(size_t rows, size_t cols, const emp::vector<T>& in_vec) 
-          : n_cols(cols), n_rows(rows){
+          : data(), n_cols(cols), n_rows(rows){
+            std::cout << n_rows << "x" << n_cols << std::endl;
         emp_assert(in_vec.size() == rows * cols, "Matrix declared as size ", rows, "x", cols,
             " but passed initializing vector of size", in_vec.size());
         for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
