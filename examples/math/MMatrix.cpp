@@ -1,5 +1,5 @@
 //  This file is part of Empirical, https://github.com/devosoft/Empirical
-//  Copyright (C) Michigan State University, 2018-2020.
+//  Copyright (C) Michigan State University, 2018-2021.
 //  Released under the MIT Software license; see doc/LICENSE
 //
 //

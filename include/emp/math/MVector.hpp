@@ -1,7 +1,7 @@
 /**
  *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2018-2020.
+ *  @date 2018-2021.
  *
  *  @file  MVector.hpp
  *  @brief Euclidean vector used for linear algebra calculations
@@ -26,7 +26,6 @@ namespace emp{
       size_t card;
     public:
       // Constructors
-      //MVector()  = delete;
       MVector(): emp_vec(), card(0) {;}
       MVector(size_t _card) : emp_vec(_card, 0), card(_card){;}
       MVector(std::initializer_list<double> val_list)
@@ -177,8 +176,6 @@ namespace emp{
           (*this) /= mag;
         return *this;
       }
-
-      
   };
   // Misc. functions
   std::ostream & operator<<(std::ostream & out, const emp::MVector & v) {
