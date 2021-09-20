@@ -3,7 +3,7 @@
 //  Released under the MIT Software license; see doc/LICENSE
 //
 //
-//  Some examples code for using emp::MVector
+//  Some example code for using emp::MVector
 
 #include <iostream>
 #include "emp/math/MVector.hpp"

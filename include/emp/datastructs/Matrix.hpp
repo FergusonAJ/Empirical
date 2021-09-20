@@ -7,7 +7,7 @@
  *  @brief Basic matrix implementation to hold two-dimensional data. 
  *  @note Status: ALPHA
  *
- *  The goal of this class is simply to make accessing easier than a vector of vectors.
+ *  The goal of this class is to make accessing easier than a vector of vectors.
  *  If you need a matrix implementation capable of linear algebra, see include/emp/math/Matrix.hpp
  */
 

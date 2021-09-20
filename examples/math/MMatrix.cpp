@@ -3,7 +3,7 @@
 //  Released under the MIT Software license; see doc/LICENSE
 //
 //
-//  Some examples code for using emp::MMatrix
+//  Some example code for using emp::MMatrix
 
 #include <iostream>
 #include "emp/math/MMatrix.hpp"

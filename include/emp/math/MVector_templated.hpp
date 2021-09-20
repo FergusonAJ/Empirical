@@ -16,7 +16,6 @@
 
 
 #include "../base/vector.hpp"
-//#include <immintrin.h>
 #include <cmath>
 
 

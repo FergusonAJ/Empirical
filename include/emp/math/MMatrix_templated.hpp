@@ -18,7 +18,6 @@
 
 #include "../base/vector.hpp"
 #include "./MVector.hpp"
-//#include <immintrin.h>
 #include <cmath>
 
 
