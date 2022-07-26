@@ -51,7 +51,7 @@ namespace emp{
       struct Instruction;
 
       using derived_t = DERIVED;
-      using data_t = uint32_t;
+      using data_t = int32_t;
       using inst_t = Instruction;
       using inst_lib_t = VirtualCPU_InstLib<derived_t, data_t, 0>;
       using genome_t = Genome<Instruction, inst_lib_t>;
@@ -427,7 +427,7 @@ namespace emp{
       void ResetMemory(){
         // Initialize registers to their position.  So Reg0 = 0 and Reg11 = 11.
         for (size_t i = 0; i < num_regs; i++) {
-          regs[i] = (data_t) i;
+          regs[i] = 0;//(data_t) i;
         }
         for(size_t i = 0; i < NUM_STACKS; ++i){
           stacks[i].resize(0);
@@ -780,7 +780,7 @@ namespace emp{
         ostr << " RH: " << read_head;
         ostr << " WH: " << write_head;
         ostr << " FH: " << flow_head;
-        ostr << "(nops: " << num_nops << "; regs: " << num_regs << ")" << std::endl;
+        ostr << " (nops: " << num_nops << "; regs: " << num_regs << ")" << std::endl;
         for(size_t reg_idx = 0; reg_idx < regs.size(); ++reg_idx){
           ostr << "[" << reg_idx << "] " << regs[reg_idx] << std::endl;
         }
