@@ -3,13 +3,13 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2019
  *
- *  @file  ArgManager.hpp
- *  @brief A tool for sythesizing command-line arguments, URL query params, and config files.
+ *  @file ArgManager.hpp
+ *  @brief A tool for parsing command-line arguments, URL query params, and config files.
  *  @note Status: BETA
  */
 
-#ifndef EMP_CL_ARG_MANAGER_H
-#define EMP_CL_ARG_MANAGER_H
+#ifndef EMP_CONFIG_ARGMANAGER_HPP_INCLUDE
+#define EMP_CONFIG_ARGMANAGER_HPP_INCLUDE
 
 #include <algorithm>
 #include <cstdlib>
@@ -21,9 +21,10 @@
 #include <string>
 #include <vector>
 
+#include "../base/optional.hpp"
 #include "../base/Ptr.hpp"
 #include "../base/vector.hpp"
-#include "../base/optional.hpp"
+
 #include "command_line.hpp"
 #include "config.hpp"
 
@@ -186,8 +187,8 @@ namespace emp {
           } else if (args[i].size() == 2) {
             // in POSIX, -- means treat subsequent words as literals
             // so we remove the -- and stop deflagging subsequent words
-            res.erase(std::next(std::begin(res),i));
-            args.erase(std::next(std::begin(args),i));
+            res.erase(std::next(std::begin(res),(int) i));
+            args.erase(std::next(std::begin(args),(int) i));
             break;
           }
           // " ", -, ---, ----, etc. left in place and treated as non-flags
@@ -199,7 +200,7 @@ namespace emp {
       // If word is a valid command or alias for a command,
       // return the deflagged, dealiased command...
       // otherwise, it's a positional command.
-	    // In this context, positional commands are options that take
+      // In this context, positional commands are options that take
       // option-arguments
       auto parse_alias = [deflagged, args, alias_map, specs](const size_t i) {
         const std::string deflag = deflagged[i];
@@ -299,22 +300,19 @@ namespace emp {
           );
 
           // store the argument pack
+          bool is_special = command == "_positional"
+                          || command == "_unknown"
+                          || command == "_invalid";
           res.insert({
               command,
               pack_t(
-                std::next(
-                  std::begin(args),
-                  command == "_positional"
-                    || command == "_unknown"
-                    || command == "_invalid"
-                  ? i : i+1
-                ),
-                j+1 < args.size() ? std::next(std::begin(args), j+1) : std::end(args)
+                std::next( std::begin(args), (int) (is_special ? i : i+1) ),
+                j+1 < args.size() ? std::next(std::begin(args), (int) j+1) : std::end(args)
               )
           });
           i = j;
 
-		    }
+        }
 
       }
 
@@ -798,4 +796,4 @@ namespace emp {
   }
 }
 
-#endif
+#endif // #ifndef EMP_CONFIG_ARGMANAGER_HPP_INCLUDE

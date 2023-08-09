@@ -1,9 +1,18 @@
-#ifndef EMP_READOUT_PANEL_HPP
-#define EMP_READOUT_PANEL_HPP
+/**
+ *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  @date 2021-2022.
+ *
+ *  @file ReadoutPanel.hpp
+ *  @brief UI framework for live statistic readouts.
+ */
+
+#ifndef EMP_PREFAB_READOUTPANEL_HPP_INCLUDE
+#define EMP_PREFAB_READOUTPANEL_HPP_INCLUDE
 
 #include "../tools/string_utils.hpp"
-#include "../web/Div.hpp"
 #include "../web/Animate.hpp"
+#include "../web/Div.hpp"
 
 #include "Card.hpp"
 #include "ValueBox.hpp"
@@ -74,7 +83,7 @@ namespace emp::prefab {
     /**
      * @param group_name name for this collection of values, displayed in card header
      * @param refresh_time the time in milliseconds between refreshes to the live values
-     * @param state initial state of the card, one of STAITC, INIT_OPEN, or INIT_CLOSED
+     * @param state initial state of the card, one of STATIC, INIT_OPEN, or INIT_CLOSED
      * @param show_glyphs whether the underlying card should show toggle icons in card header
      * @param id a user defined ID for ReadoutPanel div (default is emscripten generated)
      */
@@ -104,7 +113,7 @@ namespace emp::prefab {
      * header
      * @param refresh_milliseconds the minimum time in milliseconds between
      * refreshes to the live values
-     * @param state initial state of the card, one of STAITC, INIT_OPEN, or
+     * @param state initial state of the card, one of STATIC, INIT_OPEN, or
      * INIT_CLOSED
      * @param show_glyphs whether the underlying card should show toggle icons
      * in card header
@@ -138,7 +147,7 @@ namespace emp::prefab {
           }
         }
         // Might not be necessary, but if elapsed time got to 2x
-        // the refresh period, redraws are being severly delayed by
+        // the refresh period, redraws are being severely delayed by
         // something. Setting to zero in this case has the effect of
         // dropping frames to prevent choking execution with redraws.
         if (elapsed_milliseconds > refresh_milliseconds) {
@@ -157,7 +166,7 @@ namespace emp::prefab {
 
     }
 
-    /// A helper function to formate IDs generated for subcomponents
+    /// A helper function to formate IDs generated for sub-components
     inline static std::string FormatName(const std::string & name) {
       return to_lower(join(slice(name, ' '), "_"));
     }
@@ -208,4 +217,4 @@ namespace emp::prefab {
   };
 }
 
-#endif
+#endif // #ifndef EMP_PREFAB_READOUTPANEL_HPP_INCLUDE

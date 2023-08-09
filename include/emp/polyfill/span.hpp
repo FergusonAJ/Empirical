@@ -1,22 +1,15 @@
-#ifndef POLYFILL_SPAN_H
-#define POLYFILL_SPAN_H
+/**
+ *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  @date 2021
+ *
+ *  @file span.hpp
+ *  @brief Polyfill for C++20 std::span. Since deprecated.
+ */
 
-#include "../../../third-party/span-lite/include/nonstd/span.hpp"
-
-#if __cplusplus <= 201703L
-
-// alias span-lite's nonstd::span to std::span
-// this is done to ease transition to C++20 spans at a later point
-// TODO: C++20 || cpp20
-namespace std {
-  template <typename ...Args>
-  using span = nonstd::span<Args...>;
-}
-
-#else // #if __cplusplus <= 201703L
+#ifndef EMP_POLYFILL_SPAN_HPP_INCLUDE
+#define EMP_POLYFILL_SPAN_HPP_INCLUDE
 
 #include <span>
 
-#endif // #if __cplusplus <= 201703L
-
-#endif // #ifndef POLYFILL_SPAN_H
+#endif // #ifndef EMP_POLYFILL_SPAN_HPP_INCLUDE

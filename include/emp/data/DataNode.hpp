@@ -3,7 +3,7 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2016-2018
  *
- *  @file  DataNode.hpp
+ *  @file DataNode.hpp
  *  @brief DataNode objects track a specific type of data over the course of a run.
  *
  *  Collection: New data can be pushed or pulled.
@@ -21,18 +21,18 @@
  *         reflects the number of resets.
  */
 
-#ifndef EMP_DATA_NODE_H
-#define EMP_DATA_NODE_H
+#ifndef EMP_DATA_DATANODE_HPP_INCLUDE
+#define EMP_DATA_DATANODE_HPP_INCLUDE
 
-#include <limits>
 #include <algorithm>
+#include <limits>
 
-#include "../base/vector.hpp"
 #include "../base/assert.hpp"
-#include "../meta/ValPack.hpp"
+#include "../base/vector.hpp"
 #include "../datastructs/IndexMap.hpp"
 #include "../functional/FunctionSet.hpp"
 #include "../math/math.hpp"
+#include "../meta/ValPack.hpp"
 #include "../tools/string_utils.hpp"
 
 namespace emp {
@@ -126,7 +126,10 @@ namespace emp {
     /// Calculate the median of observed values
     double GetMedian() const {emp_assert(false, "Calculating median requires a DataNode with the Log modifier"); return 0;}
     /// Calculate a percentile of observed values
-    double GetPercentile(const double pct) const {emp_assert(false, "Calculating percentile requires a DataNode with the Log modifier"); return 0;}
+    double GetPercentile(const double /*pct*/) const {
+      emp_assert(false, "Calculating percentile requires a DataNode with the Log modifier");
+      return 0;
+    }
 
     const std::string & GetName() const { return emp::empty_string(); }
     const std::string & GetDescription() const { return emp::empty_string(); }
@@ -141,7 +144,7 @@ namespace emp {
       emp_assert(false, "Invalid call for DataNode config.");
     }
 
-    void AddDatum(const VAL_TYPE & val) { val_count++; }
+    void AddDatum(const VAL_TYPE & /*val*/) { val_count++; }
 
     void Reset() { val_count = 0; }
 
@@ -765,4 +768,4 @@ namespace emp {
   using DataArchive = DataNode<T, data::Info, data::Archive, data::FullRange, MODS...>;
 }
 
-#endif
+#endif // #ifndef EMP_DATA_DATANODE_HPP_INCLUDE

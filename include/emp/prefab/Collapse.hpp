@@ -1,10 +1,19 @@
-#ifndef EMP_COLLAPSE_HPP
-#define EMP_COLLAPSE_HPP
+/**
+ *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  @date 2020
+ *
+ *  @file Collapse.hpp
+ *  @brief Sets up a collapsable DOM element.
+ */
+
+#ifndef EMP_PREFAB_COLLAPSE_HPP_INCLUDE
+#define EMP_PREFAB_COLLAPSE_HPP_INCLUDE
 
 #include "../tools/string_utils.hpp"
 #include "../web/Div.hpp"
-#include "../web/Widget.hpp"
 #include "../web/_FacetedWidget.hpp"
+#include "../web/Widget.hpp"
 
 namespace emp {
 namespace prefab {
@@ -207,15 +216,15 @@ namespace prefab {
       emp::vector<web::Widget> & GetControllerDivs() { return controllers; }
 
       /// Returns the controller at the given index
-      web::Widget & GetControllerDiv(const int index=0) { return controllers[index]; }
+      web::Widget & GetControllerDiv(const size_t index=0) { return controllers[index]; }
 
       /// Returns the vector of all targets associated with this CollapseCouple
       emp::vector<web::Widget> & GetTargetDivs() { return targets; }
 
       /// Returns the target at the given index
-      web::Widget & GetTargetDiv(const int index=0) { return targets[index]; }
+      web::Widget & GetTargetDiv(const size_t index=0) { return targets[index]; }
   };
 }
 }
 
-#endif
+#endif // #ifndef EMP_PREFAB_COLLAPSE_HPP_INCLUDE

@@ -1,44 +1,44 @@
 /**
  *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2019-2021.
+ *  @date 2019-2022.
  *
  *  @file matchbin_metrics.hpp
  *  @brief Metric structs that can be plugged into MatchBin.
  *
  */
 
+#ifndef EMP_MATCHING_MATCHBIN_METRICS_HPP_INCLUDE
+#define EMP_MATCHING_MATCHBIN_METRICS_HPP_INCLUDE
 
-#ifndef EMP_MATCH_BIN_METRICS_H
-#define EMP_MATCH_BIN_METRICS_H
 
-#include <iostream>
-#include <unordered_map>
-#include <unordered_set>
-#include <functional>
 #include <algorithm>
-#include <stdexcept>
+#include <array>
+#include <functional>
+#include <iostream>
 #include <limits>
+#include <queue>
 #include <ratio>
+#include <span>
+#include <stdexcept>
 #include <string>
 #include <tuple>
-#include <array>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
-#include <queue>
 
 #include "../../../third-party/robin-hood-hashing/src/include/robin_hood.h"
 
-#include "../base/assert.hpp"
 #include "../base/array.hpp"
+#include "../base/assert.hpp"
 #include "../base/vector.hpp"
 #include "../bits/BitSet.hpp"
-#include "../datastructs/IndexMap.hpp"
 #include "../datastructs/hash_utils.hpp"
+#include "../datastructs/IndexMap.hpp"
 #include "../datastructs/tuple_utils.hpp"
-#include "../math/math.hpp"
 #include "../math/Distribution.hpp"
+#include "../math/math.hpp"
 #include "../tools/string_utils.hpp"
-#include "../polyfill/span.hpp"
 
 namespace emp {
 
@@ -1226,4 +1226,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_MATCHING_MATCHBIN_METRICS_HPP_INCLUDE

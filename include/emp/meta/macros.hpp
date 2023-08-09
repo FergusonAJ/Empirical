@@ -32,7 +32,7 @@
  *  EMP_SELECT_ARGS(PATTERN, ...) Uses the (repeating) patter to select arguments to keep.
  *    Pattern is an argument pack consisting of i (include) or x (exclude).
  *  EMP_GET_ODD_ARGS(...) will return all arguments at odd positions (1,3,5,7, etc.)
- *  EMP_GET_EVEN_ARGS(...) will return all arguments at odd positions (2,4,6,8, etc.)
+ *  EMP_GET_EVEN_ARGS(...) will return all arguments at even positions (2,4,6,8, etc.)
  *  EMP_REVERSE_ARGS(...) Reverse the order of arguments passed in.
  *
  *  ===== Argument Manipulation and Formatting =====
@@ -78,8 +78,8 @@
  *      W(A,B,a,b,c,d), W(A,B,e,f,g,h), W(A,B,i,j,k,l)
  */
 
-#ifndef EMP_MACROS_H
-#define EMP_MACROS_H
+#ifndef EMP_META_MACROS_HPP_INCLUDE
+#define EMP_META_MACROS_HPP_INCLUDE
 
 #include <utility>  // For declval
 
@@ -89,7 +89,7 @@
 
 /// The below values allow you to have EMP_FAKE_ARG or EMP_FAKE_2ARG as a single argument.
 /// If you prepend it with EMP_CONVERT it will trigger a conversion.  If you prepend anything
-/// else similarly, it wil NOT triggera a conversion (and stay a single argument)
+/// else similarly, it wil NOT trigger a conversion (and stay a single argument)
 #define EMP_CONVERT_ARG_EMP_FAKE_ARG(A) A
 #define EMP_CONVERT_ARG_EMP_FAKE_2ARG(A) ~, A
 
@@ -203,7 +203,7 @@
 /// @cond MACROS
 // S = Size of each pack
 // N = Number of packs
-// P = Pack representatio of number of packs
+// P = Pack representation of number of packs
 #define EMP_ARGS_TO_PACKS_impl(S, N, ...) EMP_ARGS_TO_PACKS_implB(S, EMP_DEC_TO_PACK(N), __VA_ARGS)
 #define EMP_ARGS_TO_PACKS_implB(S, P, ...) @CAO
 
@@ -1178,4 +1178,4 @@
 #define EMP_ASSEMBLE_MERGE(A, B) A ## B
 /// @endcond
 
-#endif
+#endif // #ifndef EMP_META_MACROS_HPP_INCLUDE

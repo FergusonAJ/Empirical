@@ -12,20 +12,29 @@
  *  @todo speed up Append to count all additions at once, resize, and fill them in.
  */
 
-#ifndef EMP_VECTOR_UTILS_H
-#define EMP_VECTOR_UTILS_H
+#ifndef EMP_DATASTRUCTS_VECTOR_UTILS_HPP_INCLUDE
+#define EMP_DATASTRUCTS_VECTOR_UTILS_HPP_INCLUDE
 
-#include <numeric>
-#include <set>
 #include <algorithm>
 #include <functional>
 #include <limits>
 #include <map>
+#include <numeric>
+#include <set>
 
 #include "../base/vector.hpp"
 #include "../tools/string_utils.hpp"
 
 namespace emp {
+
+  // Remove and return the first element of a vector.
+  template <typename T>
+  T PopFront(emp::vector<T> & v) {
+    emp_assert(v.size());
+    T out = v[0];
+    v.erase(v.begin());
+    return out;
+  }
 
   /// Base case for Append; we just have a single vector with nothing to append.
   template <typename T>
@@ -61,13 +70,19 @@ namespace emp {
 
   /// Convert a map to a vector.
   template <typename T, typename INDEX_T=size_t>
-  emp::vector<T> ToVector(const std::map<INDEX_T, T> & in_map, T default_val=T()) {
+  emp::vector<T> ToVector(
+    const std::map<INDEX_T, T> & in_map,
+    T default_val=T(),
+    INDEX_T index_cap=32768
+  ) {
     INDEX_T max_index = in_map.back().second;
     if (max_index < 0) max_index = 0; // In case all entries are negative...
+    if (max_index >= index_cap) max_index=index_cap-1;
     emp::vector<T> out_vec;
     out_vec.resize(max_index+1, default_val);
     for (auto [index, val] : in_map) {
-      if (index < 0) continue; // Skip entries that can't go into a vector...
+      if (index < 0) continue;       // Skip entries that can't go into a vector...
+      if (index >= index_cap) break; // Stop when we've hit the upper limit on vector size.
       out_vec[index] = val;
     }
     return out_vec;
@@ -75,10 +90,14 @@ namespace emp {
 
   /// Convert an unordered map to a vector.
   template <typename T, typename INDEX_T=size_t>
-  emp::vector<T> ToVector(const std::unordered_map<INDEX_T, T> & in_map, T default_val=T()) {
+  emp::vector<T> ToVector(
+    const std::unordered_map<INDEX_T, T> & in_map,
+    T default_val=T(),
+    INDEX_T index_cap=32768
+  ) {
     emp::vector<T> out_vec;
     for (auto [index, val] : in_map) {
-      if (index < 0) continue; // Skip entries that can't go into a vector...
+      if (index < 0 || index >= index_cap) continue; // Skip entries that can't go into a vector...
       if (((size_t) index) >= out_vec.size()) out_vec.resize(index+1, default_val);
       out_vec[index] = val;
     }
@@ -284,7 +303,7 @@ namespace emp {
 
     return out_vv;
   }
-  
+
   /// Returns a vector containing the numbers from @param N1 to @param N2
   // from https://stackoverflow.com/questions/13152252/is-there-a-compact-equivalent-to-python-range-in-c-stl
   template <typename T>
@@ -295,7 +314,7 @@ namespace emp {
   }
 
   /// Return a new vector containing the same elements as @param v
-  /// with any duplicate elements removed. 
+  /// with any duplicate elements removed.
   /// Not guaranteed to preserve order
   template <typename T>
   emp::vector<T> RemoveDuplicates(const emp::vector<T> & v) {
@@ -391,4 +410,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_DATASTRUCTS_VECTOR_UTILS_HPP_INCLUDE

@@ -1,12 +1,9 @@
-#ifndef EMP_JSWRAP_H
-#define EMP_JSWRAP_H
-
 /**
  *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
+ *  @date 2015-2022.
  *
- *  @file  JSWrap.hpp
+ *  @file JSWrap.hpp
  *  @brief Wrap a C++ function and convert it to an integer that can be called from Javascript
  *
  *  To wrap a function, call:
@@ -38,6 +35,9 @@
  *        mostly to be able to test programs without Emscripten.
  *
  */
+
+#ifndef EMP_WEB_JSWRAP_HPP_INCLUDE
+#define EMP_WEB_JSWRAP_HPP_INCLUDE
 
 #include <array>
 #include <functional>
@@ -92,7 +92,7 @@ namespace emp {
 
   template <int ARG_ID> static void LoadArg(std::string & arg_var) {
     char * tmp_var = (char *) MAIN_THREAD_EM_ASM_INT({
-        return allocate(intArrayFromString(emp_i.cb_args[$0]), 'i8', ALLOC_STACK);
+        return allocate(intArrayFromString(emp_i.cb_args[$0]), ALLOC_STACK);
       }, ARG_ID);
     arg_var = tmp_var;   // @CAO Do we need to free the memory in tmp_var?
   }
@@ -173,8 +173,9 @@ namespace emp {
       if (emp_i.curr_obj[UTF8ToString($0)] == null){
         emp_i.curr_obj[UTF8ToString($0)] = "undefined";
       }
+
       return allocate(intArrayFromString(emp_i.curr_obj[UTF8ToString($0)]),
-                   'i8', ALLOC_STACK);
+                   ALLOC_STACK);
     }, var.c_str());
     arg_var = tmp_var;   // Free memory here?
   }
@@ -204,7 +205,7 @@ namespace emp {
 
   template <typename JSON_TYPE, int ARG_ID>
   struct LoadTuple<JSON_TYPE, ARG_ID, 0> {
-    static void LoadJSDataArg(JSON_TYPE & arg_var) {
+    static void LoadJSDataArg(JSON_TYPE & /*arg_var*/) {
         MAIN_THREAD_EM_ASM({emp_i.curr_obj = emp_i.object_queue.pop();});
     }
   };
@@ -304,7 +305,7 @@ namespace emp {
 
   template <typename JSON_TYPE>
   struct StoreTuple<JSON_TYPE, 0> {
-    static void StoreJSDataArg(const JSON_TYPE & ret_var) {
+    static void StoreJSDataArg(const JSON_TYPE & /*ret_var*/) {
       MAIN_THREAD_EM_ASM({emp_i.curr_obj = emp_i.object_queue.pop();});
     }
   };
@@ -628,4 +629,4 @@ void empCppCallback(const size_t cb_id) {
 
 
 
-#endif
+#endif // #ifndef EMP_WEB_JSWRAP_HPP_INCLUDE

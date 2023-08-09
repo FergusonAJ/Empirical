@@ -3,18 +3,19 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2016-2017
  *
- *  @file  random_utils.hpp
+ *  @file random_utils.hpp
  *  @brief Helper functions for emp::Random for common random tasks.
  *  @note Status: RELEASE
  */
 
-#ifndef EMP_RANDOM_UTILS_H
-#define EMP_RANDOM_UTILS_H
+#ifndef EMP_MATH_RANDOM_UTILS_HPP_INCLUDE
+#define EMP_MATH_RANDOM_UTILS_HPP_INCLUDE
 
 #include <functional>
 
 #include "../base/vector.hpp"
 #include "../bits/BitVector.hpp"
+
 #include "Random.hpp"
 
 namespace emp {
@@ -26,6 +27,7 @@ namespace emp {
   template <typename T>
   inline void Shuffle(Random & random, emp::vector<T> & v, size_t max_count)
   {
+    emp_assert(max_count <= v.size());
     for (size_t i = 0; i < max_count; i++) {
       const size_t pos = random.GetUInt(i, v.size());
       if (pos == i) continue;
@@ -36,6 +38,17 @@ namespace emp {
   template <typename T>
   inline void Shuffle(Random & random, emp::vector<T> & v) { Shuffle(random, v, v.size()); }
 
+  template <typename T>
+  inline void ShuffleRange(Random & random, emp::vector<T> & v, size_t first, size_t last)
+  {
+    emp_assert(first <= last);
+    emp_assert(last <= v.size());
+    for (size_t i = first; i < last; i++) {
+      const size_t pos = random.GetUInt(i, last);
+      if (pos == i) continue;
+      std::swap(v[i], v[pos]);
+    }
+  }
 
   /// Return an emp::vector<int> numbered 0 through size-1 in a random order.
 
@@ -129,4 +142,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_MATH_RANDOM_UTILS_HPP_INCLUDE

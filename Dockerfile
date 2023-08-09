@@ -43,10 +43,8 @@ RUN \
     && \
   apt-get install --no-install-recommends --allow-downgrades -y \
     dpkg-dev \
+    g++-11 \
     libc6=2.27-3ubuntu1 \
-    libc6-dev \
-    libc6-dbg \
-    build-essential \
     xvfb \
     x11vnc \
     x11-xkb-utils \
@@ -60,13 +58,6 @@ RUN \
     libnss3 \
     lsb-release \
     xdg-utils \
-    g++-8=8-20180414-1ubuntu2 \
-    gcc-8-base=8-20180414-1ubuntu2 \
-    cpp-8=8-20180414-1ubuntu2 \
-    gcc-8=8-20180414-1ubuntu2 \
-    gcc-8-base=8-20180414-1ubuntu2 \
-    libgcc-8-dev \
-    libstdc++-8-dev \
     cmake \
     python-virtualenv \
     python-pip-whl \
@@ -162,11 +153,11 @@ ENV DISPLAY :99
 RUN echo 'kernel.unprivileged_userns_clone=1' > /etc/sysctl.d/userns.conf
 
 RUN \
-  update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90 \
+  update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90 \
   && \
   npm install -g n \
   && \
-  n 12.18.2 \
+  n 14.17 \
   && \
   export python="/usr/bin/python3" \
   && \
@@ -211,13 +202,13 @@ RUN \
 RUN \
   /etc/init.d/xvfb start \
    && \
-  cd /opt/Empirical/tests \
+  make test-web-ConfigPanel -C /opt/Empirical/tests/web \
     && \
-  make test-web \
+  make test-native-ConfigPanel -C /opt/Empirical/tests/web \
     && \
-  make test-base \
+  make test-vector -C /opt/Empirical/tests/base \
     && \
-  make clean \
+  make clean -C /opt/Empirical/tests \
     && \
   echo "representative tests passed!"
 
@@ -254,8 +245,10 @@ RUN \
   && \
   echo "installed karma-firefox-launcher"
 
+# @mmore500 10-2021: python3 -m pip fixes UnicodeDecodeError
+# when installing charset-normalizer from github
 RUN \
-  pip install -r /opt/Empirical/third-party/requirements.txt \
+  python3 -m pip install -r /opt/Empirical/third-party/requirements.txt \
     && \
   echo "installed documentation build requirements"
 

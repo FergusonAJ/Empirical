@@ -3,14 +3,14 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2018-2020.
  *
- *  @file  Distribution.hpp
+ *  @file Distribution.hpp
  *  @brief A set of pre-calculated discrete distributions that can quickly generate random values.
  *  @note Status: ALPHA
  *
  *  A Distribution is a pre-calculated set of probabilities to quickly pick a whole-number result.
- *  These should be used when either we need to draw from the same distribution many time (and hence
- *  the extra time to pre-calculate it is amortized away) -or- in functions that we want to call with
- *  a range of distributions that we may not know ahead of time.
+ *  These should be used when either we need to draw from the same distribution many time (and
+ *  hence the extra time to pre-calculate it is amortized away) -or- in functions that we want to
+ *  call with a range of distributions that we may not know ahead of time.
  *
  *  Currently, we have:
  *
@@ -19,15 +19,16 @@
  *    NegativeBinomial - How many attempts to reach N successes, with p probability per attempt?
  *
  *
- *  Developor Notes:
+ *  Developer Notes:
  *  - We should setup an offset in the base Distribution class to ignore "impossible" low values.
  *
  */
 
-#ifndef EMP_DISTRIBUTION_H
-#define EMP_DISTRIBUTION_H
+#ifndef EMP_MATH_DISTRIBUTION_HPP_INCLUDE
+#define EMP_MATH_DISTRIBUTION_HPP_INCLUDE
 
 #include "../datastructs/UnorderedIndexMap.hpp"
+
 #include "Random.hpp"
 
 namespace emp {
@@ -47,6 +48,7 @@ namespace emp {
       return weights.Index( in_value * GetTotalProb() );
     }
 
+    /// Pick a random item using this distribution.
     size_t PickRandom(Random & random) const {
       emp_assert(weights.GetSize() > 0, "Distribution can only pick a random entry if it has at least one entry!");
       return weights.Index( random.GetDouble(GetTotalProb()) );
@@ -122,7 +124,7 @@ namespace emp {
 
   };
 
-  /// How many attempts to reach N successes, assumming p probability per attempt?
+  /// How many attempts to reach N successes, assuming p probability per attempt?
   class NegativeBinomial : public Distribution {
   private:
     double p = 0.0;
@@ -170,4 +172,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_MATH_DISTRIBUTION_HPP_INCLUDE

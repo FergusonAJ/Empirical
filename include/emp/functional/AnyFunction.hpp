@@ -3,18 +3,18 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2019
  *
- *  @file  AnyFunction.hpp
+ *  @file AnyFunction.hpp
  *  @brief Based on std::function, but with a generic base class.
  *  @note Status: ALPHA
  *
  *  (Built from GenericFunction.h)
  */
 
-
-#ifndef EMP_ANY_FUNCTION_H
-#define EMP_ANY_FUNCTION_H
+#ifndef EMP_FUNCTIONAL_ANYFUNCTION_HPP_INCLUDE
+#define EMP_FUNCTIONAL_ANYFUNCTION_HPP_INCLUDE
 
 #include <functional>
+
 #include "../base/assert.hpp"
 #include "../base/Ptr.hpp"
 #include "../meta/type_traits.hpp"
@@ -50,6 +50,8 @@ namespace emp {
 
     /// Determine if this BaseFunction can be converted into a derived emp::Function
     template <typename T> bool ConvertOK();
+
+    virtual emp::Ptr<BaseFunction> Clone() = 0;
   };
 
 
@@ -80,6 +82,10 @@ namespace emp {
 
     /// Get the std::function to be called.
     const fun_t & GetFunction() const { return fun; }
+
+    emp::Ptr<BaseFunction> Clone() override{
+      return emp::NewPtr<DerivedFunction<RETURN(PARAMS...)>>(fun);
+    }
   };
 
 
@@ -88,6 +94,7 @@ namespace emp {
   private:
     emp::Ptr<BaseFunction> fun = nullptr;
 
+  private:
     /// Helper to build a proper derived function.
     template <typename T>
     auto MakePtr( T in_fun ) {
@@ -101,6 +108,29 @@ namespace emp {
     // By default, build an empty function.
     AnyFunction() { ; }
 
+    AnyFunction(const AnyFunction& other){ // copy constructor
+      fun = other.CloneFunc();
+    }
+
+    AnyFunction(AnyFunction&& other) noexcept{ // move constructor
+      fun = other.CloneFunc();
+      other.fun.Delete();
+      other.fun = nullptr;
+    }
+
+    AnyFunction& operator=(const AnyFunction& other){ // copy assignment
+      Clear();
+      fun = other.CloneFunc();
+      return *this;
+    }
+
+    AnyFunction& operator=(AnyFunction&& other) noexcept{ // move assignment
+      Clear();
+      fun = other.CloneFunc();
+      other.Clear();
+      return *this;
+    }
+
     /// If an argument is provided, set the function.
     template <typename T>
     AnyFunction(T in_fun) {
@@ -111,6 +141,10 @@ namespace emp {
 
     void Clear() { if (fun) fun.Delete(); fun = nullptr; }
     size_t NumArgs() const { return fun ? fun->NumArgs() : 0; }
+    emp::Ptr<BaseFunction> CloneFunc() const{
+      if(fun == nullptr) return nullptr;
+      return fun->Clone();
+    }
 
     operator bool() { return (bool) fun; }
 
@@ -200,4 +234,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_FUNCTIONAL_ANYFUNCTION_HPP_INCLUDE

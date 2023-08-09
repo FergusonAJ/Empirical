@@ -1,8 +1,11 @@
-// This file is part of Empirical, https://github.com/mercere99/Empirical/, and is
-// Copyright (C) Michigan State University, 2015. It is licensed
-// under the MIT Software license; see doc/LICENSE
+/**
+ *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  @date 2015
+ *
+ *  @file config.cpp
+ */
 
-#define CATCH_CONFIG_MAIN
 #include "third-party/Catch/single_include/catch2/catch.hpp"
 
 #include <iostream>
@@ -14,6 +17,7 @@
 #include "emp/config/ArgManager.hpp"
 #include "emp/config/command_line.hpp"
 #include "emp/config/config.hpp"
+
 #include "assets/config_setup.hpp"
 
 TEST_CASE("Test config", "[config]"){
@@ -49,7 +53,7 @@ TEST_CASE("Test config", "[config]"){
     REQUIRE(query.find("TEST_CONST=91") != std::string::npos);
     REQUIRE(query.find("TEST_STRING_SPACE=abc%20def%20%20%20ghi") != std::string::npos);
     REQUIRE(query.find("TEST_STRING_QUOTE=%22Quote%22andonemore%22soit%27sodd") != std::string::npos);
-    REQUIRE(query.find("MUTATION_RATE=0.025") != std::string::npos);
+    REQUIRE(query.find("MUTATION_RATE=0.099") != std::string::npos);
 
   }
 

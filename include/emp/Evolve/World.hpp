@@ -3,7 +3,7 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2017-2018
  *
- *  @file  World.hpp
+ *  @file World.hpp
  *  @brief Definition of a base class for a World template for use in evolutionary algorithms.
  *
  *  A definition of the emp::World template, linking in specialized file handling, iterators,
@@ -14,8 +14,6 @@
  *        whether or not they also affect injected organisms.  (Right now they always do!!)
  *  @todo We should Specialize World so that ANOTHER world can be used as an ORG, with proper
  *        delegation to facilitate demes, pools, islands, etc.
- *  @todo We should be able to have any number of systematics managers, based on various type_trait
- *        information a that we want to track.
  *  @todo Add a signal for DoBirth() for when a birth fails.
  *  @todo Add a signal for population Reset() (and possibly Clear?)
  *  @todo Add a feature to maintain population sorted by each phenotypic trait.  This will allow
@@ -23,8 +21,8 @@
  *        phenotype.
  */
 
-#ifndef EMP_EVO_WORLD_H
-#define EMP_EVO_WORLD_H
+#ifndef EMP_EVOLVE_WORLD_HPP_INCLUDE
+#define EMP_EVOLVE_WORLD_HPP_INCLUDE
 
 #include <functional>
 #include <map>
@@ -33,14 +31,14 @@
 #include "../base/Ptr.hpp"
 #include "../base/vector.hpp"
 #include "../bits/BitSet.hpp"
-#include "../control/Signal.hpp"
 #include "../control/SignalControl.hpp"
+#include "../control/Signal.hpp"
 #include "../data/DataFile.hpp"
 #include "../data/DataManager.hpp"
-#include "../data/Trait.hpp"
 #include "../datastructs/map_utils.hpp"
-#include "../math/random_utils.hpp"
+#include "../data/Trait.hpp"
 #include "../math/Random.hpp"
+#include "../math/random_utils.hpp"
 #include "../math/Range.hpp"
 #include "../meta/reflection.hpp"
 #include "../tools/string_utils.hpp"
@@ -256,23 +254,23 @@ namespace emp {
     size_t GetUpdate() const { return update; }
 
     /// How many cells wide is the world? (assumes grids are active.)
-    size_t GetWidth() const { 
+    size_t GetWidth() const {
       emp_assert(HasAttribute("PopStruct"));
-      emp_assert(GetAttribute("PopStruct") == "Grid" || GetAttribute("PopStruct") == "3DGrid"); 
-      return pop_sizes[0]; 
+      emp_assert(GetAttribute("PopStruct") == "Grid" || GetAttribute("PopStruct") == "3DGrid");
+      return pop_sizes[0];
     }
 
     /// How many cells tall is the world? (assumes grids are active.)
-    size_t GetHeight() const { 
+    size_t GetHeight() const {
       emp_assert(HasAttribute("PopStruct"));
-      emp_assert(GetAttribute("PopStruct") == "Grid" || GetAttribute("PopStruct") == "3DGrid"); 
-      return pop_sizes[1]; 
+      emp_assert(GetAttribute("PopStruct") == "Grid" || GetAttribute("PopStruct") == "3DGrid");
+      return pop_sizes[1];
     }
 
     /// How many cells deep is the world? (assumes 3d grids are active.)
-    size_t GetDepth() const { 
-      emp_assert(HasAttribute("PopStruct") && GetAttribute("PopStruct") == "3DGrid"); 
-      return pop_sizes[2]; 
+    size_t GetDepth() const {
+      emp_assert(HasAttribute("PopStruct") && GetAttribute("PopStruct") == "3DGrid");
+      return pop_sizes[2];
     }
 
     /// Get the full population to analyze externally.
@@ -972,7 +970,7 @@ namespace emp {
 
     // Track the new systematics info
     for (Ptr<SystematicsBase<ORG> > s : systematics) {
-      s->AddOrg(*new_org, pos, (int) update);
+      s->AddOrg(*new_org, pos);
     }
 
     SetupOrg(*new_org, pos, *random_ptr);
@@ -993,10 +991,10 @@ namespace emp {
     if (pos.IsActive()) {
       --num_orgs;                                    // Track one fewer organisms in the population
       if (cache_on) ClearCache(id);                  // Delete any cached info about this organism
-    } 
+    }
 
     for (Ptr<SystematicsBase<ORG> > s : systematics) {
-      s->RemoveOrgAfterRepro(pos, update);          // Notify systematics about organism removal
+      s->RemoveOrgAfterRepro(pos);                   // Notify systematics about organism removal
     }
 
   }
@@ -1172,15 +1170,15 @@ namespace emp {
       int size_y = (int) pop_sizes[1];
 
       if(id1 == id2) { //self, not neighbors
-	      return false;
+        return false;
       }
 
       int diff = id1 - id2;
       int row_diff = abs(diff / size_x);
       int col_diff = abs(diff%size_x);
 
-      if((row_diff <= 1 || row_diff == (size_y-1)) && 
-        (col_diff <= 1 || col_diff == (size_x-1)))	return true;
+      if((row_diff <= 1 || row_diff == (size_y-1)) &&
+        (col_diff <= 1 || col_diff == (size_x-1)))  return true;
       else return false;
     };
 
@@ -1265,7 +1263,7 @@ namespace emp {
         } else if (z_pos == size_z - 1) {
           for (int i = 18; i < 27; i++) {
             options.Set(i, false);
-          }          
+          }
         }
        if (y_pos == 0) {
           options.Set(0, false);
@@ -1288,7 +1286,7 @@ namespace emp {
           options.Set(25, false);
           options.Set(26, false);
         }
-       if (x_pos == 0) {         
+       if (x_pos == 0) {
           options.Set(0, false);
           options.Set(3, false);
           options.Set(6, false);
@@ -1316,7 +1314,7 @@ namespace emp {
           rand_pos = options.PopOne();
         }
       }
-      
+
       int rand_z = z_pos + rand_pos / 9 - 1;
       int rand_y = y_pos + (rand_pos - (9 * (rand_pos / 9))) / 3 - 1;
       int rand_x = x_pos + (rand_pos - (9 * (rand_pos / 9))) % 3 - 1;
@@ -1351,7 +1349,7 @@ namespace emp {
 
       int x_diff = abs(x_pos_1 - x_pos_2);
       int y_diff = abs(y_pos_1 - y_pos_2);
-      int z_diff = abs(z_pos_1 - z_pos_2);    
+      int z_diff = abs(z_pos_1 - z_pos_2);
 
       return (x_diff <= 1) && (y_diff <= 1) && (z_diff <= 1);
 
@@ -1489,6 +1487,13 @@ namespace emp {
       pop.resize(0);
       std::swap(pops[0], pops[1]);            // Move next pop into place.
 
+      // Tell systematics manager to swap next population and population
+      // Needs to happen here so that you can refer to systematics in
+      // OnPlacement functions
+      for (Ptr<SystematicsBase<ORG>> s : systematics) {
+        s->Update();
+      }
+
       // Update the active population.
       num_orgs = 0;
       for (size_t i = 0; i < pop.size(); i++) {
@@ -1498,12 +1503,7 @@ namespace emp {
       }
     }
 
-    // 3. Handle systematics and any data files that need to be printed this update.
-
-    // Tell systematics manager to swap next population and population
-    for (Ptr<SystematicsBase<ORG>> s : systematics) {
-      s->Update();
-    }
+    // 3. Handle any data files that need to be printed this update.
 
     for (auto file : files) file->Update(update);
 
@@ -1624,13 +1624,13 @@ namespace emp {
 
   /// Return IDs of all occupied neighbors of specified position.
   template<typename ORG>
-  emp::vector<size_t> World<ORG>::GetValidNeighborOrgIDs(size_t id) { 
-    //Note: this function is similar to FindCellIDs, but because ORG don't know their index, 
+  emp::vector<size_t> World<ORG>::GetValidNeighborOrgIDs(size_t id) {
+    //Note: this function is similar to FindCellIDs, but because ORG don't know their index,
     //FindCellIDs can't be used.
     emp::vector<size_t> valid_IDs(0);
     for(size_t i = 0; i < pop.size(); i++) {
       if ((bool) (pop[i].Raw()) && IsNeighbor(id, i)) {
-	      valid_IDs.push_back(i);
+        valid_IDs.push_back(i);
       }
     }
     return valid_IDs;
@@ -1737,4 +1737,4 @@ namespace emp {
 
 }
 
-#endif
+#endif // #ifndef EMP_EVOLVE_WORLD_HPP_INCLUDE
