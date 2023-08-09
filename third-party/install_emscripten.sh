@@ -22,6 +22,7 @@ cd emsdk
 git pull
 
 # Download and install the latest SDK tools.
+
 ./emsdk install 3.1.18
 
 # Make the "latest" SDK "active" for the current user. (writes ~/.emscripten file)
