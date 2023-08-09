@@ -45,12 +45,20 @@ namespace emp {
   public:
     CharSetBase() : char_set() { }
 
-    CharSetBase(CHAR_T in_char) { char_set[static_cast<size_t>(in_char)] = true; }
+    CharSetBase(CHAR_T c) { char_set[static_cast<size_t>(c)] = true; }
     CharSetBase(const std::string & in_chars) {
       for (CHAR_T x : in_chars) char_set[static_cast<size_t>(x)] = true;
     }
+    CharSetBase(const char * in_chars) : CharSetBase(std::string(in_chars)) { }
     CharSetBase(const this_t &) = default;
+
     this_t & operator=(const this_t &) = default;
+    this_t & operator=(char c) { Reset(); char_set[static_cast<size_t>(c)] = true; }
+    this_t & operator=(const std::string & in_chars) {
+      for (CHAR_T x : in_chars) char_set[static_cast<size_t>(x)] = true;      
+    }
+
+    CharSetBase & Reset() { char_set.fill(0); }
 
     size_t GetMaxChar() const noexcept { return MAX_CHAR; }
     bool Has(CHAR_T index) const { return char_set[static_cast<size_t>(index)]; }
@@ -68,6 +76,14 @@ namespace emp {
     }
     bool HasAt(const std::string & str, size_t pos) const {
       return (pos < str.size()) && Has(str[pos]);
+    }
+
+    size_t FindIn(const std::string & str, size_t pos=0) const {
+      while (pos < str.size()) {
+        if (Has(str[pos])) return pos;
+        ++pos;
+      }
+      return std::string::npos;
     }
 
     bool operator[](CHAR_T index) const { return char_set[static_cast<size_t>(index)]; }
@@ -102,7 +118,13 @@ namespace emp {
 
     CharSetBase<CHAR_T,MAX_CHAR> operator+(const this_t & other) const {
       this_t out(*this);
-      for (char c : other) out.Set(c);
+      for (CHAR_T c : other) out.Set(c);
+      return out;
+    }
+
+    CharSetBase<CHAR_T,MAX_CHAR> operator!() const {
+      this_t out(*this);
+      for (CHAR_T & c : out.char_set) c = !c;
       return out;
     }
 
@@ -141,6 +163,19 @@ namespace emp {
       size_t count = 0;
       for (char c : str) if (Has(c)) count++;
       return count;
+    }
+
+    /// Count the number of matches that occur at the beginning of a string.
+    size_t CountFrontMatches(const std::string & str) const {
+      size_t count = 0;
+      while (count < str.size() && Has(str[count])) count++;
+      return count;
+    }
+
+    size_t CountBackMatches(const std::string & str) const {
+      size_t end_pos = str.size();
+      while (end_pos > 0 && Has(str[end_pos-1])) end_pos--;
+      return str.size() - end_pos;
     }
 
     /// Convert this set of characters into a regex-style character set.
@@ -194,6 +229,16 @@ namespace emp {
     return cs;
   }
 
+  static const CharSet & PunctuationCharSet() {
+    static CharSet cs = !(AlphanumericCharSet() + '_' + WhitespaceCharSet());
+    return cs;
+  }
+
+  /// Which characters can come after a backslash in a string?
+  static const CharSet & EscapeCodeCharSet() {
+    static CharSet cs("bfnrtv0\\\"\'`");
+    return cs;
+  }
 
   inline bool is_whitespace(char test_char)   { return WhitespaceCharSet().Has(test_char); }
   inline bool is_upper_letter(char test_char) { return UpperCharSet().Has(test_char); }
@@ -202,6 +247,8 @@ namespace emp {
   inline bool is_digit(char test_char)        { return DigitCharSet().Has(test_char); }
   inline bool is_alphanumeric(char test_char) { return AlphanumericCharSet().Has(test_char); }
   inline bool is_idchar(char test_char)       { return IDCharSet().Has(test_char); }
+  inline bool is_punctuation(char test_char)   { return PunctuationCharSet().Has(test_char); }
+  inline bool is_escape_code(char test_char)   { return EscapeCodeCharSet().Has(test_char); }
 
   /// Determine if a character is in a set of characters (represented as a string)
   static inline bool is_one_of(char test_char, const std::string & char_set) {
@@ -216,6 +263,28 @@ namespace emp {
   template <typename... FUNS>
   inline bool is_valid(char test_char, std::function<bool(char)> fun1, FUNS... funs) {
     return fun1(test_char) || is_valid(test_char, funs...);
+  }
+
+  /// Convert a char after a backslash to its escaped version.
+  inline char ToEscapeChar(char c) {
+    switch (c) {
+      case 'b': return '\b';   // Backspace
+      case 'f': return '\f';   // Form feed
+      case 'n': return '\n';   // Newline
+      case 'r': return '\r';   // Return
+      case 't': return '\t';   // Tab
+      case 'v': return '\v';   // Vertical tab
+      case '0': return '\0';   // Empty (character 0)
+      case '\\': return '\\';  // Backslash
+      case '"': return '"';    // Double quote
+      case '\'': return '\'';  // Single quote
+      case '`': return '`';    // Backquote
+      default:
+        emp_assert(false, "unknown escape char used; probably need to update converter!");
+    }
+
+    // @CAO: Need to add special types of numerical escapes here (e.g., ascii codes!)
+    return '\0';
   }
 
 }

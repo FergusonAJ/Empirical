@@ -235,9 +235,9 @@ namespace emp {
           return ptr.ReinterpretCast<const base_t>()->ToDouble();
         }
 
-        // If this type is convertable to a double, cast the pointer to the correct type, de-reference it,
+        // If this type is convertible to a double, cast the pointer to the correct type, de-reference it,
         // and then return the conversion.  Otherwise return NaN
-        if constexpr (std::is_convertible<T, double>::value) {
+        else if constexpr (std::is_convertible<T, double>::value) {
           return (double) *ptr.ReinterpretCast<const base_t>();
         }
         else return std::nan("");
@@ -283,7 +283,7 @@ namespace emp {
           return ptr.ReinterpretCast<base_t>()->FromDouble(value);
         }
 
-        // If this type is convertable to a double, cast the pointer to the correct type, de-reference it,
+        // If this type is convertible to a double, cast the pointer to the correct type, de-reference it,
         // and then return the conversion.  Otherwise return NaN
         if constexpr (std::is_convertible<double, T>::value) {
           *ptr.ReinterpretCast<base_t>() = (base_t) value;

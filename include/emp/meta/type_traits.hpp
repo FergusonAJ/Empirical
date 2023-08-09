@@ -1,7 +1,7 @@
 /**
  *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016-2021.
+ *  @date 2016-2022.
  *
  *  @file type_traits.hpp
  *  @brief Extensions on the standard library type traits to handle Empirical classes (such as Ptr).
@@ -12,6 +12,7 @@
 
 
 #include <functional>
+#include <span>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -21,6 +22,7 @@
 // located in base directory to preserve levelization
 
 #include "meta.hpp"
+
 
 namespace emp {
 
@@ -105,14 +107,20 @@ namespace emp {
   template <typename T, typename... Ts>
   struct is_emp_vector<emp::vector<T, Ts...>> : std::true_type { };
 
+  /// Determine if we have a span.
+  template <typename> struct is_span : std::false_type { };
+  template <typename T>
+  struct is_span<std::span<T>> : std::true_type { };
+  // template <typename T, size_t SIZE>
+  // struct is_span<std::span<T,SIZE>> : std::true_type { };
 
   // Customized type traits; for the moment, make sure that emp::Ptr is handled correctly.
   template <typename> struct is_ptr_type : public std::false_type { };
   template <typename T> struct is_ptr_type<T*> : public std::true_type { };
   template <typename T> struct is_ptr_type<T* const> : public std::true_type { };
   template <typename T> struct is_ptr_type<Ptr<T>> : public std::true_type { };
-  template <typename T>
-  constexpr bool is_ptr_type_v(const T&) { return is_ptr_type<T>::value; }
+  template <typename T> constexpr bool is_ptr_type_v() { return is_ptr_type<T>::value; }
+  template <typename T> constexpr bool is_ptr_type_v(const T&) { return is_ptr_type<T>::value; }
   template <typename T> using is_pointer = is_ptr_type<T>;
 
   template <typename T> struct remove_ptr_type         { using type = T; };

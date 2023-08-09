@@ -78,6 +78,7 @@ namespace emp {
       //return std::to_string(num);
     }
 
+//    operator bool() const { return AsDouble() != 0.0; }
     operator double() const { return AsDouble(); }
     operator std::string() const { return AsString(); }
 
@@ -109,6 +110,11 @@ namespace emp {
     Datum & operator=(const char * in) { return SetString(in); }
     Datum & operator=(const Datum & in) { return Set(in); }
 
+    // Unary operators
+    Datum operator-() const { return -AsDouble(); }
+    Datum operator!() const { return AsDouble() == 0.0; }
+
+    // Binary operators
     int CompareNumber(double rhs) const {
       const double val = AsDouble();
       return (val == rhs) ? 0 : ((val < rhs) ? -1 : 1);
@@ -127,12 +133,12 @@ namespace emp {
     int Compare(const char * rhs) const { return CompareString(rhs); }
     int Compare(const Datum & rhs) const { return (rhs.is_num) ? CompareNumber(rhs) : CompareString(rhs); }
 
-    template<typename T> bool operator==(T && rhs) const { return Compare(std::forward<T>(rhs)) == 0; }
-    template<typename T> bool operator!=(T && rhs) const { return Compare(std::forward<T>(rhs)) != 0; }
-    template<typename T> bool operator< (T && rhs) const { return Compare(std::forward<T>(rhs)) == -1; }
-    template<typename T> bool operator>=(T && rhs) const { return Compare(std::forward<T>(rhs)) != -1; }
-    template<typename T> bool operator> (T && rhs) const { return Compare(std::forward<T>(rhs)) == 1; }
-    template<typename T> bool operator<=(T && rhs) const { return Compare(std::forward<T>(rhs)) != 1; }
+    template<typename T> bool operator==(const T & rhs) const { return Compare(rhs) == 0; }
+    template<typename T> bool operator!=(const T & rhs) const { return Compare(rhs) != 0; }
+    template<typename T> bool operator< (const T & rhs) const { return Compare(rhs) == -1; }
+    template<typename T> bool operator>=(const T & rhs) const { return Compare(rhs) != -1; }
+    template<typename T> bool operator> (const T & rhs) const { return Compare(rhs) == 1; }
+    template<typename T> bool operator<=(const T & rhs) const { return Compare(rhs) != 1; }
 
     Datum operator+(const Datum & in) const {
       if (IsDouble()) return NativeDouble() + in.AsDouble();

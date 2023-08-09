@@ -3,16 +3,19 @@
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
  *  @date 2022
  *
- *  @file DataMapParser.cpp
+ *  @file SimpleParser.cpp
  */
 
 #define CATCH_CONFIG_MAIN
 
 #include "third-party/Catch/single_include/catch2/catch.hpp"
 
-#include "emp/data/DataMapParser.hpp"
+#include <map>
+#include <unordered_map>
 
-TEST_CASE("Test DataMap", "[data]")
+#include "emp/data/SimpleParser.hpp"
+
+TEST_CASE("Test DataMap in SimpleParser", "[data]")
 {
   emp::DataMap dmA;
   dmA.AddVar<double>("val1", 1.5);
@@ -33,7 +36,7 @@ TEST_CASE("Test DataMap", "[data]")
   // dmB    0.125 64.25     4  1024
 
 
-  emp::DataMapParser parser;
+  emp::SimpleParser parser;
 
   // Test a bunch of constant math.
   CHECK( parser.RunMathFunction(dmA, "(0 || 0)") == 0.0 );
@@ -68,7 +71,8 @@ TEST_CASE("Test DataMap", "[data]")
 
   // Now, try to use these with DataMap variables!
 
-  auto fun = parser.BuildMathFunction(dmA, "val1 + val2 + 2*val3");
+  std::function<emp::Datum(const emp::DataMap &)> fun =
+    parser.BuildMathFunction(dmA, "val1 + val2 + 2*val3");
   CHECK( fun(dmA) == 9.5 );
   CHECK( fun(dmB) == 72.375 );
 
@@ -154,28 +158,28 @@ TEST_CASE("Test DataMap", "[data]")
   CHECK( fun(dmB) == 60.25 );
 
   fun = parser.BuildMathFunction(dmA, "CBRT(val1)");
-  CHECK( fun(dmA) == Approx(1.1447142426) );
-  CHECK( fun(dmB) == Approx(0.5) );
+  CHECK( fun(dmA).AsDouble() == Approx(1.1447142426) );
+  CHECK( fun(dmB).AsDouble() == Approx(0.5) );
 
   fun = parser.BuildMathFunction(dmA, "SQRT(val2)");
-  CHECK( fun(dmA) == Approx(1.4142135624) );
-  CHECK( fun(dmB) == Approx(8.0156097709) );
+  CHECK( fun(dmA).AsDouble() == Approx(1.4142135624) );
+  CHECK( fun(dmB).AsDouble() == Approx(8.0156097709) );
 
   fun = parser.BuildMathFunction(dmA, "SQRT(val3)");
-  CHECK( fun(dmA) == Approx(1.7320508076) );
+  CHECK( fun(dmA).AsDouble() == Approx(1.7320508076) );
   CHECK( fun(dmB) == 2.0 );
 
   fun = parser.BuildMathFunction(dmA, "CBRT(val4)");
-  CHECK( fun(dmA) == Approx(6.3496042079) );
-  CHECK( fun(dmB) == Approx(10.0793683992) );
+  CHECK( fun(dmA).AsDouble() == Approx(6.3496042079) );
+  CHECK( fun(dmB).AsDouble() == Approx(10.0793683992) );
 
   fun = parser.BuildMathFunction(dmA, "SQRT(val3) * SQRT(val2) + CBRT(val1) + CBRT(val4)");
-  CHECK( fun(dmA) == Approx(9.9438081932) );
-  CHECK( fun(dmB) == Approx(26.610587941) );
+  CHECK( fun(dmA).AsDouble() == Approx(9.9438081932) );
+  CHECK( fun(dmB).AsDouble() == Approx(26.610587941) );
 
   fun = parser.BuildMathFunction(dmA, "LOG(val1) + LOG(val2,9) + LOG2(val3) + LOG10(val4)");
-  CHECK( fun(dmA) == Approx(4.7141324511) );
-  CHECK( fun(dmB) == Approx(4.8254220245) );
+  CHECK( fun(dmA).AsDouble() == Approx(4.7141324511) );
+  CHECK( fun(dmB).AsDouble() == Approx(4.8254220245) );
 
   names_used = parser.GetNamesUsed();
   CHECK( names_used.size() == 4 );
@@ -188,20 +192,20 @@ TEST_CASE("Test DataMap", "[data]")
   CHECK( !emp::Has(names_used, "LOG10") );
 
   fun = parser.BuildMathFunction(dmA, "SIN(val1)");
-  CHECK( fun(dmA) == Approx(0.9974949866) );
-  CHECK( fun(dmB) == Approx(0.1246747334) );
+  CHECK( fun(dmA).AsDouble() == Approx(0.9974949866) );
+  CHECK( fun(dmB).AsDouble() == Approx(0.1246747334) );
 
   fun = parser.BuildMathFunction(dmA, "COS(val2)");
-  CHECK( fun(dmA) == Approx(-0.4161468365) );
-  CHECK( fun(dmB) == Approx(0.1520572536) );
+  CHECK( fun(dmA).AsDouble() == Approx(-0.4161468365) );
+  CHECK( fun(dmB).AsDouble() == Approx(0.1520572536) );
 
   fun = parser.BuildMathFunction(dmA, "TAN(val4 - val3)");
-  CHECK( fun(dmA) == Approx(-9.7900600635) );
-  CHECK( fun(dmB) == Approx(-1.6194475388) );
+  CHECK( fun(dmA).AsDouble() == Approx(-9.7900600635) );
+  CHECK( fun(dmB).AsDouble() == Approx(-1.6194475388) );
 
   fun = parser.BuildMathFunction(dmA, "SIN(val1) + COS(val2) + TAN(val4 - val3)");
-  CHECK( fun(dmA) == Approx(-9.2087119135) );
-  CHECK( fun(dmB) == Approx(-1.3427155518) );
+  CHECK( fun(dmA).AsDouble() == Approx(-9.2087119135) );
+  CHECK( fun(dmB).AsDouble() == Approx(-1.3427155518) );
 
   fun = parser.BuildMathFunction(dmA, "CEIL(SIN(val1))");
   CHECK( fun(dmA) == 1.0 );
@@ -226,7 +230,7 @@ TEST_CASE("Test DataMap", "[data]")
 
   fun = parser.BuildMathFunction(dmA, "HYPOT(2*val1, val3+1)");
   CHECK( fun(dmA) == 5.0 );
-  CHECK( fun(dmB) == Approx(5.0062460986) );
+  CHECK( fun(dmB).AsDouble() == Approx(5.0062460986) );
 
   fun = parser.BuildMathFunction(dmA, "MIN(val2, val3)");
   CHECK( fun(dmA) == 2.0 );
@@ -269,4 +273,46 @@ TEST_CASE("Test DataMap", "[data]")
   fun = parser.BuildMathFunction(dmA, expression, multiple);
   CHECK( fun(dmA) == 9.5 );
   CHECK( fun(dmB) == 72.375 );
+
+
+  // Test with string concatenation for '+'
+  emp::DataMap dmC;
+  dmC.AddVar<std::string>("val1", "abc");
+  dmC.AddVar<std::string>("val2", "def");
+  fun = parser.BuildMathFunction(dmC, "val1 + val2");
+  CHECK(fun(dmC).AsString() == "abcdef");
+}
+
+TEST_CASE("Test std::map in SimpleParser", "[data]")
+{
+  std::map<std::string, double> var_map;
+  var_map["x"] = 5;
+  var_map["y"] = 10;
+
+  emp::SimpleParser parser;
+  auto fun = parser.BuildMathFunction(var_map, "11*x + y*y");
+
+  CHECK(fun(var_map) == 155.0);
+
+  var_map["x"] = 3.5;
+  var_map["y"] = 5;
+
+  CHECK(fun(var_map) == 63.5);
+}
+
+TEST_CASE("Test emp::ra_map in SimpleParser", "[data]")
+{
+  emp::ra_map<std::string, double> var_map;
+  var_map["x"] = 5;
+  var_map["y"] = 10;
+
+  emp::SimpleParser parser;
+  auto fun = parser.BuildMathFunction(var_map, "11*x + y*y");
+
+  CHECK(fun(var_map) == 155.0);
+
+  var_map["x"] = 3.5;
+  var_map["y"] = 5;
+
+  CHECK(fun(var_map) == 63.5);
 }

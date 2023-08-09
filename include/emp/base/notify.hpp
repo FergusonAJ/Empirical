@@ -1,7 +1,7 @@
 /**
  *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
  *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2021.
+ *  @date 2021-2022.
  *
  *  @file notify.hpp
  *  @brief Tools to alert users of messages (including errors and warnings) in a consistant manner.
@@ -57,7 +57,7 @@ namespace notify {
   using id_arg_t = const id_t &;
   using message_arg_t = const message_t &;
   using response_t = bool(id_arg_t, message_arg_t, except_data_t);
-  using exit_fun_t = std::function<void(size_t)>;
+  using exit_fun_t = std::function<void(int)>;
 
   /// Information about an exception that has occurred.
   struct ExceptInfo {
@@ -77,6 +77,25 @@ namespace notify {
       case Type::WARNING: return "WARNING";
       case Type::ERROR: return "ERROR";
       case Type::EXCEPTION: return "EXCEPTION";
+      default: return "Unknown";
+    }
+  }
+
+  /// Convert a type to a human-readable string in COLOR.
+  static id_t ColorTypeID(Type type) {
+    const std::string green_text = "\033[32m";
+    const std::string magenta_text = "\033[35m";
+    const std::string red_text = "\033[31m";
+    const std::string yellow_text = "\033[33m";
+    const std::string normal_text = "\033[39m";
+    const std::string bold_text = "\033[1m";
+    const std::string no_bold_text = "\033[22m";
+    switch (type) {
+      case Type::MESSAGE: return green_text + "Message" + normal_text;
+      case Type::DEBUG: return green_text + bold_text + "Debug" + no_bold_text + normal_text;
+      case Type::WARNING: return yellow_text + bold_text + "WARNING" + no_bold_text + normal_text;
+      case Type::ERROR: return red_text + bold_text + "ERROR" + no_bold_text + normal_text;
+      case Type::EXCEPTION: return magenta_text + bold_text + "EXCEPTION" + no_bold_text + normal_text;
       default: return "Unknown";
     }
   }
@@ -152,7 +171,7 @@ namespace notify {
     /// Replace all handlers with nothing (i.e., clear them)
     void Replace() { Clear(); }
 
-    /// Replace all handelers with the generic ones provided.
+    /// Replace all handlers with the generic ones provided.
     template <typename... FUN_Ts>
     void Replace(fun_t in, FUN_Ts... extra) {
       Replace(extra...);
@@ -188,7 +207,8 @@ namespace notify {
         [](id_arg_t, message_arg_t){ return true; }
 #else
         [](id_arg_t,  message_arg_t msg) {
-          std::cout << "Debug: " << msg << std::endl;
+          const std::string tag = ColorTypeID(Type::DEBUG);
+          std::cout << tag << ": " << msg << std::endl;
           return true;
         }
 #endif
@@ -196,41 +216,44 @@ namespace notify {
 
       GetHandler(Type::WARNING).Add(
         [](id_arg_t,  message_arg_t msg) {
-          std::cerr << "WARNING: " << msg << std::endl;
-          return true;
+          const std::string tag = ColorTypeID(Type::WARNING);
+          std::cout << tag << ": " << msg << std::endl;
+          return true;  // Only warning, do not exit.
         }
       );
 
       GetHandler(Type::ERROR).Add(
         [](id_arg_t,  message_arg_t msg) {
-          std::cerr << "ERROR: " << msg << std::endl;
-          return true;
+          const std::string tag = ColorTypeID(Type::ERROR);
+          std::cout << tag << ": " << msg << std::endl;
+          return false;  // Does not correct the problem, so exit.
         }
       );
 
       GetHandler(Type::EXCEPTION).Add(
         [](id_arg_t id,  message_arg_t msg) {
-          std::cerr << "EXCEPTION (" << id << "): " << msg << std::endl;
-          return false;
+          const std::string tag = ColorTypeID(Type::EXCEPTION);
+          std::cerr << tag << " (" << id << "): " << msg << std::endl;
+          return false;  // Does not correct the problem, so exit.
         }
       );
       GetHandler(Type::EXCEPTION).SetExitOnFail();
 
       // The initial exit handler should actually exit, using the appropriate exit code.
-      exit_funs.push_back( [](size_t code){ exit(code); } );
+      exit_funs.push_back( [](int code){ exit(code); } );
     }
   };
 
   /// Central call to obtain NotifyData singleton.
   static NotifyData & GetData() { static NotifyData data; return data; }
-  auto & MessageHandlers() { return GetData().GetHandler(Type::MESSAGE); }
-  auto & DebugHandlers() { return GetData().GetHandler(Type::DEBUG); }
-  auto & WarningHandlers() { return GetData().GetHandler(Type::WARNING); }
-  auto & ErrorHandlers() { return GetData().GetHandler(Type::ERROR); }
+  inline auto & MessageHandlers() { return GetData().GetHandler(Type::MESSAGE); }
+  inline auto & DebugHandlers() { return GetData().GetHandler(Type::DEBUG); }
+  inline auto & WarningHandlers() { return GetData().GetHandler(Type::WARNING); }
+  inline auto & ErrorHandlers() { return GetData().GetHandler(Type::ERROR); }
 
-  static void AddExitHandler(exit_fun_t fun) { GetData().exit_funs.push_back(fun); }
-  static void ClearExitHandlers() { GetData().exit_funs.resize(0); }
-  static void ReplaceExitHandlers() { ClearExitHandlers(); }
+  [[maybe_unused]] static void AddExitHandler(exit_fun_t fun) { GetData().exit_funs.push_back(fun); }
+  [[maybe_unused]] static void ClearExitHandlers() { GetData().exit_funs.resize(0); }
+  [[maybe_unused]] static void ReplaceExitHandlers() { ClearExitHandlers(); }
   template <typename... FUN_Ts>
   static void ReplaceExitHandlers(exit_fun_t fun, FUN_Ts... extras) {
     ReplaceExitHandlers(extras...);
@@ -238,11 +261,16 @@ namespace notify {
   }
 
   /// Generic exit handler that calls all of the provided functions.
-  static void Exit(size_t exit_code) {
+  [[maybe_unused]] static void Exit(int exit_code) {
     NotifyData & data = GetData();
+
+    // Run any cleanup functions.
     for (auto it = data.exit_funs.rbegin(); it != data.exit_funs.rend(); ++it) {
       (*it)(exit_code);
     }
+
+    // Exit for real.
+    exit(exit_code);
   }
 
   /// Generic Notification where type must be specified.
@@ -267,12 +295,12 @@ namespace notify {
     return result;
   }
 
-  static void Pause() {
+  [[maybe_unused]] static void Pause() {
     NotifyData & data = GetData();
     data.is_paused = true;
   }
 
-  static void Unpause() {
+  [[maybe_unused]] static void Unpause() {
     NotifyData & data = GetData();
 
     // Step through the notifications that have accrued.
@@ -306,10 +334,31 @@ namespace notify {
   /// Send out a notification of an ERROR.
   template <typename... Ts>
   static bool Error(Ts... args) {
-    bool success = Notify(Type::ERROR, std::forward<Ts>(args)...);
-    if (!success) Exit(1);
+    bool success = Notify(Type::ERROR, std::forward<Ts>(args)...);    
+    if (!success) {
+#ifdef NDEBUG
+      Exit(1);
+#else
+      abort();
+#endif
+    }
     return success;
   }
+
+  // Trigger a warning only if a specified condition is true.
+  template <typename... Ts>
+  static bool TestWarning(bool test, Ts... args) {
+    if (test) return Warning(std::forward<Ts>(args)...);
+    return true;
+  }
+
+  // Trigger an error only if a specified condition is true.
+  template <typename... Ts>
+  static bool TestError(bool test, Ts... args) {
+    if (test) return Error(std::forward<Ts>(args)...);
+    return true;
+  }
+
 
   /// Add a handler for a particular exception type.
   template <typename FUN_T>
@@ -324,18 +373,18 @@ namespace notify {
   }
 
   /// Ignore exceptions of a specific type.
-  static HandlerSet & Ignore(id_arg_t id) {
+  [[maybe_unused]] static HandlerSet & Ignore(id_arg_t id) {
     return AddHandler(id, [](id_arg_t, message_arg_t){ return true; });
   }
 
   /// Turn on a particular verbosity category.
-  void SetVerbose(std::string id, bool make_active=true) {
+  [[maybe_unused]] static void SetVerbose(std::string id, bool make_active=true) {
     GetData().verbose_map[id] = make_active;
   }
 
   /// Send out a notification of an "verbose" message.
   template <typename... Ts>
-  static bool Verbose(const std::string & id, Ts... args) {
+  [[maybe_unused]] static bool Verbose(const std::string & id, Ts... args) {
     NotifyData & data = GetData();
 
     if (data.verbose_map[id]) {
@@ -346,7 +395,7 @@ namespace notify {
   }
 
   /// Send out a notification of an Exception.
-  static bool Exception(id_arg_t id, message_arg_t message="", except_data_t except_data=0) {
+  [[maybe_unused]] static bool Exception(id_arg_t id, message_arg_t message="", except_data_t except_data=0) {
     NotifyData & data = GetData();
 
     if (data.is_paused) {
@@ -357,7 +406,7 @@ namespace notify {
     // Retrieve any specialized exception handlers for this type of exception.
     bool result = data.handler_map[id].Trigger(id, message, except_data);
 
-    // If unresolved, see if we should quit; else use a generic exceptionhandler.
+    // If unresolved, see if we should quit; else use a generic exception handler.
     if (!result) {
       if (data.handler_map[id].GetExitOnFail()) Exit(1);
       result = data.handler_map["EXCEPTION"].Trigger(id, message, except_data);
@@ -373,38 +422,38 @@ namespace notify {
   }
 
   /// Retrieve a vector of ALL unresolved exceptions.
-  static const emp::vector<ExceptInfo> & GetExceptions() { return GetData().except_queue; }
+  [[maybe_unused]] static const emp::vector<ExceptInfo> & GetExceptions() { return GetData().except_queue; }
 
   /// Retrieve the first unresolved exception with a given id.
-  static ExceptInfo GetException(id_arg_t id) {
+  [[maybe_unused]] static ExceptInfo GetException(id_arg_t id) {
     for (ExceptInfo & x : GetData().except_queue) if (x.id == id) return x;
     return ExceptInfo{};
   }
 
   /// Return a total count of how many unresolved exceptions are left.
-  static size_t CountExceptions() { return GetData().except_queue.size(); }
+  [[maybe_unused]] static size_t CountExceptions() { return GetData().except_queue.size(); }
 
   /// Return a total count of how many unresolved exceptions have a given id.
-  static size_t CountExceptions(id_arg_t id) {
+  [[maybe_unused]] static size_t CountExceptions(id_arg_t id) {
     size_t count = 0;
     for (ExceptInfo & x : GetData().except_queue) if (x.id == id) ++count;
     return count;
   }
 
   /// Identify whether there are ANY unresolved exceptions.
-  static bool HasExceptions() { return CountExceptions(); }
+  [[maybe_unused]] static bool HasExceptions() { return CountExceptions(); }
 
   /// Identify whether there are any unresolved exceptions with a given id.
-  static bool HasException(id_arg_t id) {
+  [[maybe_unused]] static bool HasException(id_arg_t id) {
     for (ExceptInfo & x : GetData().except_queue) if (x.id == id) return true;
     return false;
   }
 
   /// Remove all unresolved exceptions.
-  static void ClearExceptions() { GetData().except_queue.resize(0); }
+  [[maybe_unused]] static void ClearExceptions() { GetData().except_queue.resize(0); }
 
   /// Remove first exception with a given id.
-  static void ClearException(id_arg_t id) {
+  [[maybe_unused]] static void ClearException(id_arg_t id) {
     auto & except_queue = GetData().except_queue;
     for (size_t i = 0; i < except_queue.size(); ++i) {
       if (except_queue[i].id == id) {
