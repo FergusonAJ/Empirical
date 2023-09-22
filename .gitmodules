@@ -14,3 +14,6 @@
   path = third-party/robin-hood-hashing
   url = https://github.com/martinus/robin-hood-hashing.git
   shallow = true
+[submodule "third-party/raylib"]
+	path = third-party/raylib
+	url = https://github.com/raysan5/raylib
