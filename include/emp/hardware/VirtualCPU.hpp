@@ -769,7 +769,6 @@ namespace emp{
           if(!are_regs_expanded) ExpandRegisters();
           if(nops_need_curated) CurateNops();
           if(verbose){
-            GetInstLib()->GetName(genome_working[inst_ptr].idx);
             PrintDetails();
           }
           genome_working[inst_ptr].has_been_executed = true;
@@ -827,15 +826,34 @@ namespace emp{
         return sstr.str();
       }
       /// Output the state of the CPU's heads and registers to the specified output stream
-      void PrintDetails(std::ostream& ostr = std::cout){
+      virtual void PrintDetails(std::ostream& ostr = std::cout){
         ostr << "IP: " << inst_ptr;
         ostr << " RH: " << read_head;
         ostr << " WH: " << write_head;
         ostr << " FH: " << flow_head;
-        ostr << "(nops: " << num_nops << "; regs: " << num_regs << ")" << std::endl;
+        ostr << "(nops: " << num_nops << "; regs: " << num_regs << ")\n";
         for(size_t reg_idx = 0; reg_idx < regs.size(); ++reg_idx){
-          ostr << "[" << reg_idx << "] " << regs[reg_idx] << std::endl;
+          ostr << "Reg " << reg_idx << ": " << regs[reg_idx] << "\n";
         }
+        for(size_t stack_idx = 0; stack_idx < stacks.size(); ++stack_idx){
+          ostr << "Stack " << stack_idx << ": {";
+          for(size_t inner_idx = 0; inner_idx < stacks[stack_idx].size(); ++inner_idx){
+            if(inner_idx != 0) ostr << " ";
+            ostr << stacks[stack_idx][inner_idx];
+          }
+          ostr << "}\n";
+        }
+        ostr << "Working genome: " << GetWorkingGenomeString() << "\n";
+        const nop_vec_t& nop_vec = genome_working[inst_ptr].nop_vec;
+        ostr << "About to execute: " 
+          << GetInstLib()->GetName(genome_working[inst_ptr].idx)
+          << "; followed by nops: (";
+          for(size_t nop_idx = 0; nop_idx < nop_vec.size(); ++nop_idx){
+            if(nop_idx != 0) ostr << " ";
+            ostr << nop_vec[nop_idx];
+          }
+        ostr << ")" << std::endl;
+        
       }
 
   }; // End VirtualCPU class
