@@ -28,7 +28,7 @@ namespace emp{
       Matrix() = delete;
       Matrix(size_t rows, size_t cols)
           : data(), n_cols(cols), n_rows(rows){
-            T default_val = { };
+        T default_val = { };
         for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
           emp::vector<T> v(cols, default_val);
           data.push_back(v);
@@ -100,6 +100,26 @@ namespace emp{
         emp_assert(v.size() == n_rows);
         for(size_t row_idx = 0; row_idx < n_rows; ++row_idx){
           data[row_idx][col_idx] = v[row_idx];
+        }
+      }
+      void AddRow(T default_val = T()) {
+        emp::vector<T> v(n_cols, default_val);
+        AddRow(v);
+      }
+      void AddRow(const emp::vector<T>& row_vec){
+        emp_assert(row_vec.size() == n_cols);
+        n_rows++;
+        data.push_back(row_vec);
+      }
+      void AddCol(T default_val = T()) {
+        emp::vector<T> v(n_rows, default_val);
+        AddCol(v);
+      }
+      void AddCol(const emp::vector<T>& col_vec){
+        emp_assert(col_vec.size() == n_rows);
+        n_cols++;
+        for(size_t i = 0; i < n_rows; ++i){
+          data[i].push_back(col_vec[i]);
         }
       }
       Matrix Transposed(){

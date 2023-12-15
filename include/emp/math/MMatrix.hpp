@@ -125,6 +125,14 @@ namespace emp{
         }
         return res;
       }
+      MMatrix Pow(size_t exponent){
+        MMatrix res = *this;
+        for(size_t i = 2; i <= exponent; ++i){
+          res = res * (*this);
+
+        }
+        return res;
+      }
 
       double Determinant(){
         emp_assert(n_rows == n_cols, "Can only calculate deterimant of square matrices");

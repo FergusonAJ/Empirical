@@ -21,10 +21,10 @@
 namespace emp{
   
   /// A simple Markov Chain implementation for building discrete-time chains
-  template<typename T = double>
+  template<typename T = double, typename MATRIX_T = emp::MMatrix>
   class MarkovChain{
     private:
-      emp::vector<emp::vector<T>> adj_list; ///< Representation of transition probabilities
+      MATRIX_T adj_matrix; ///< Representation of transition probabilities
       std::unordered_map<std::string, size_t> index_map; ///< Stores name of each state
 
       /// Validate the bookkeeping of the class
@@ -32,24 +32,24 @@ namespace emp{
         bool is_valid = true;
         // Check the adjacency matrix dimensions
         const size_t num_states = GetNumStates();
-        if(adj_list.size() != num_states){ 
+        if(adj_matrix.num_rows() != num_states){ 
           is_valid = false;
           std::cerr << "Error! Markov chain has incorrect number of lists in adjacency list!\n";
-          std::cerr << "  Expected: " << num_states << ". Actual: " << adj_list.size() 
+          std::cerr << "  Expected: " << num_states << ". Actual: " << adj_matrix.num_rows() 
               << std::endl;
         }
         for(size_t idx = 0; idx < num_states; ++idx){
-          if(adj_list[idx].size() != num_states){
+          if(adj_matrix.num_cols() != num_states){
             is_valid = false;
             std::cerr << "Error! Adjacency list with incorrect length (Index " << idx << ")\n";
-            std::cerr << "  Expected: " << num_states << ". Actual: " << adj_list[idx].size() 
+            std::cerr << "  Expected: " << num_states << ". Actual: " << adj_matrix.num_cols()
                 << std::endl;
           }
         }
         if(index_map.size() != num_states){
           is_valid = false;
           std::cerr << "Error! Markov chain has incorrect number of states in index map!\n";
-          std::cerr << "  Expected: " << num_states << ". Actual: " << adj_list.size() 
+          std::cerr << "  Expected: " << num_states << ". Actual: " << index_map.size() 
               << std::endl;
         }
         return is_valid;
@@ -62,7 +62,7 @@ namespace emp{
         for(size_t idx_a = 0; idx_a < num_states; ++idx_a){
           double sum = 0;
           for(size_t idx_b = 0; idx_b < num_states; ++idx_b){
-            sum += adj_list[idx_a][idx_b];
+            sum += adj_matrix.Get(idx_a,idx_b);
           }
           if(sum != 1.0){
             is_valid = false;
@@ -72,25 +72,25 @@ namespace emp{
       }
     
     public:
-      MarkovChain() = default;
+      MarkovChain() : adj_matrix(0,0){
+        ;
+      }
 
       /// Add a new state with a given name
       size_t AddState(const std::string& name){
         emp_assert(index_map.find(name) == index_map.end());
-        const size_t new_idx = adj_list.size();
+        const size_t new_idx = adj_matrix.num_rows();
         index_map[name] = new_idx;
-        emp::vector<T>& new_row = adj_list.emplace_back(new_idx+1);
-        for(size_t idx = 0; idx < new_idx; idx++){
-          adj_list[idx].push_back(0);
-        }
+        adj_matrix.AddRow(0);
+        adj_matrix.AddCol(0);
         return new_idx;
       }
 
       /// Set the transition between two states
       void SetTransition(size_t idx_a, size_t idx_b, T prob){
-        emp_assert(adj_list.size() > idx_a);
-        emp_assert(adj_list.size() > idx_b);
-        adj_list[idx_a][idx_b] = prob;
+        emp_assert(adj_matrix.num_rows() > idx_a);
+        emp_assert(adj_matrix.num_cols() > idx_b);
+        adj_matrix.Set(idx_a, idx_b, prob);
       }
 
       /// Set the transition between two states
@@ -107,14 +107,14 @@ namespace emp{
         return ValidateInternals() && ValidateProbabilities();
       }
 
-      /// Return all transition values
-      emp::vector<emp::vector<T>> GetTransitions(){
-        return adj_list;
+      /// Return const ref to transition values
+      const MATRIX_T& GetMatrix() const{
+        return adj_matrix;
       }
 
       /// Get the number of nodes in this chain
       size_t GetNumStates() const{
-        return adj_list.size();
+        return adj_matrix.num_rows();
       }
   };
 }
