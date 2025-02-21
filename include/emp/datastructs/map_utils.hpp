@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016-2023
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016-2022.
- *
- *  @file map_utils.hpp
+ *  @file
  *  @brief A set of simple functions to manipulate maps.
  *  @note Status: BETA
  */
@@ -13,6 +14,8 @@
 
 #include <algorithm>
 #include <map>
+#include <sstream>
+#include <string>
 #include <unordered_map>
 
 #include "../base/map.hpp"
@@ -20,10 +23,35 @@
 
 namespace emp {
 
+  template <typename MAP_T>
+  std::string MapToString(const MAP_T & in_map) {
+    std::stringstream ss;
+    bool use_comma = false;
+    for (const auto & [key, value] : in_map) {
+      if (use_comma) ss << ",";
+      ss << "{" << key << ":" << value << "}";
+      use_comma = true;
+    }
+    return ss.str();
+  }
+
   /// Take any map type, and run find to determine if a key is present.
   template <class MAP_T, class KEY_T>
   inline bool Has( const MAP_T & in_map, const KEY_T & key ) {
     return in_map.find(key) != in_map.end();
+  }
+
+  /// Take a map where the value is an integer and a key.
+  /// Increment value associated with that key if its present
+  /// or if its not add it and set it to 1
+  template <class MAP_T, class KEY_T>
+  inline void IncrementCounter( MAP_T & in_map, const KEY_T & key ) {
+    static_assert( std::is_same< typename MAP_T::key_type, int >::value);
+    if (emp::Has(in_map, key)) {
+      in_map[key]++;
+    } else {
+      in_map[key] = 1;
+    }
   }
 
   // Check to see if any of the elements in a map satisfy a function.
@@ -69,15 +97,12 @@ namespace emp {
   }
 
   template <class MAP_T>
-  inline auto Keys( const MAP_T & in_map) -> emp::vector<typename std::remove_const<decltype(in_map.begin()->first)>::type> {
-    using KEY_T = typename std::remove_const<decltype(in_map.begin()->first)>::type;
-    emp::vector<KEY_T> keys;
+  inline auto Keys( const MAP_T & in_map) {
+    emp::vector<typename MAP_T::key_type> keys;
     for (auto it : in_map) {
       keys.push_back(it.first);
     }
-
     return keys;
-
   }
 
 
@@ -100,6 +125,15 @@ namespace emp {
     return val_it->second;
   }
 
+  /// Take any map and element, run find() member function, and return a reference to
+  /// the result found; trip assert if the result is not present.
+  template <class MAP_T, class KEY_T>
+  inline const auto & GetConstRef( const MAP_T & in_map, const KEY_T & key) {
+    auto val_it = in_map.find(key);
+    emp_assert(val_it != in_map.end());
+    return val_it->second;
+  }
+
 
   // The following two functions are from:
   // http://stackoverflow.com/questions/5056645/sorting-stdmap-using-value
@@ -111,9 +145,10 @@ namespace emp {
   }
 
   /// Take an std::map<A,B> and return the flipped map (now multimap to be safe): std::multimap<B,A>
-  template<typename A, typename B> std::multimap<B,A> flip_map(const std::map<A,B> &src)
+  template<typename A, typename B, typename OUT_MAP=std::multimap<B,A>>
+  OUT_MAP flip_map(const std::map<A,B> &src)
   {
-    std::multimap<B,A> dst;
+    OUT_MAP dst;
     for (const auto & x : src) dst.insert( flip_pair(x) );
     return dst;
   }

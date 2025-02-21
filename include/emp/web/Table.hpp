@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2024
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Table.hpp
+ *  @file
  *  @brief Specs for the Table widget.
  *
  *  TableInfo is the core information for a table and has two helper classes:
@@ -11,7 +12,7 @@
  *  object.
  *
  *  A Table is composed of a series of rows, each with the same number of columns.
- *  TableDataInfo may be muliple cells wide/tall, masking other cells.
+ *  TableDataInfo may be multiple cells wide/tall, masking other cells.
  *
  *
  *  @todo Tables should more directly manage internal slates rather than just adding divs and
@@ -21,11 +22,12 @@
  *  @todo IDEALLY: Make a single table that will look at what each cell is pointing to (table
  *     or text) and write out what it needs to, in place.
  *  @todo Add a ClearColumn method, as well as other column functionality.
- *  @todo Add an operator[] to table that returns the appropriate row (and one to row for cell).
  */
 
 #ifndef EMP_WEB_TABLE_HPP_INCLUDE
 #define EMP_WEB_TABLE_HPP_INCLUDE
+
+#include <stddef.h>
 
 #include "../base/vector.hpp"
 
@@ -36,6 +38,7 @@
 namespace emp {
 namespace web {
 
+  #ifndef DOXYGEN_SHOULD_SKIP_THIS
   class TableWidget;
   class Table;
   class TableCell;
@@ -44,7 +47,6 @@ namespace web {
   class TableRowGroup;
   class TableColGroup;
 
-  #ifndef DOXYGEN_SHOULD_SKIP_THIS
   namespace internal {
 
     struct TableRowInfo;
@@ -54,12 +56,12 @@ namespace web {
       size_t colspan=1;    ///< How many columns wide is this TableData?
       size_t rowspan=1;    ///< How many rows deep is this TableData?
       bool header=false;   ///< Is this TableData a header (<th> vs <td>)?
-      bool masked=false;   ///< Is this cell masked by another cell?
+      bool masked=false;   ///< Is this cell masked by the span of another cell?
       WidgetExtras extras; ///< Extra annotations (attributes, style, listeners)
 
       emp::vector<Widget> children;  ///< Widgets contained in this cell.
 
-      /// Debug function to determine if this datum is structually consistent.
+      /// Debug function to determine if this datum is structurally consistent.
       bool OK(std::stringstream & ss, bool verbose=false, const std::string & prefix="") {
         bool ok = true;
         if (verbose) ss << prefix << "Scanning: emp::TableDataInfo" << std::endl;
@@ -87,7 +89,7 @@ namespace web {
         return *this;
       }
 
-      /// Debug function to determine if this row is structually consistent.
+      /// Debug function to determine if this row is structurally consistent.
       bool OK(std::stringstream & ss, bool verbose=false, const std::string & prefix="") {
         bool ok = true;
         if (verbose) { ss << prefix << "Scanning: emp::TableRowInfo" << std::endl; }
@@ -106,8 +108,10 @@ namespace web {
     };
 
     class TableInfo : public internal::WidgetInfo {
+      #ifndef DOXYGEN_SHOULD_SKIP_THIS
       friend TableWidget; friend Table; friend TableCell; friend TableRow; friend TableCol;
       friend TableRowGroup; friend TableColGroup;
+      #endif // DOXYGEN_SHOULD_SKIP_THIS
     protected:
       size_t row_count;                        /// How big is this table?
       size_t col_count;
@@ -128,6 +132,19 @@ namespace web {
       std::string GetTypeName() const override { return "TableInfo"; }
 
       void Resize(size_t new_rows, size_t new_cols) {
+        // Clear children from all cells being removed; start with cols on kept rows.
+        size_t min_rows = std::min(row_count, new_rows);
+        for (size_t col_id = new_cols; col_id < col_count; col_id++) {
+          for (size_t row_id = 0; row_id < min_rows; ++row_id) {
+            ClearCellChildren(row_id, col_id);
+          }
+        }
+  
+        // Clear removed rows.
+        for (size_t row_id = new_rows; row_id < row_count; ++row_id) {
+          ClearRowChildren(row_id);
+        }
+
         // Resize preexisting rows if remaining
         if (new_cols != col_count) {
           for (size_t r = 0; r < rows.size() && r < new_rows; r++) {
@@ -215,8 +232,13 @@ namespace web {
           MAIN_THREAD_EM_ASM({
               parent_id = UTF8ToString($0);
               child_id = UTF8ToString($1);
-              $('#' + parent_id).append('<span id="' + child_id + '"></span>');
-            }, cell_id.c_str(), in.GetID().c_str());
+              let parent = document.getElementById(parent_id);
+              if (parent) {
+                let span = document.createElement('span');
+                span.id = child_id;
+                parent.appendChild(span);
+              }
+          }, cell_id.c_str(), in.GetID().c_str());
 
           // Now that the new widget has some place to hook in, activate it!
           in->DoActivate();
@@ -235,18 +257,18 @@ namespace web {
 
       // Tables need to facilitate recursive registrations
 
-      void RegisterChildren(internal::DivInfo * regestrar) override {
+      void RegisterChildren(internal::DivInfo * registrar) override {
         for (size_t r = 0; r < row_count; r++) {
           for (size_t c = 0; c < col_count; c++) {
-            for (Widget & child : rows[r].data[c].children) regestrar->Register(child);
+            for (Widget & child : rows[r].data[c].children) registrar->Register(child);
           }
         }
       }
 
-      void UnregisterChildren(internal::DivInfo * regestrar) override {
+      void UnregisterChildren(internal::DivInfo * registrar) override {
         for (size_t r = 0; r < row_count; r++) {
           for (size_t c = 0; c < col_count; c++) {
-            for (Widget & child : rows[r].data[c].children) regestrar->Unregister(child);
+            for (Widget & child : rows[r].data[c].children) registrar->Unregister(child);
           }
         }
       }
@@ -514,7 +536,9 @@ namespace web {
   #endif // DOXYGEN_SHOULD_SKIP_THIS
 
   class TableWidget : public internal::WidgetFacet<TableWidget> {
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
     friend class internal::TableInfo;
+    #endif // DOXYGEN_SHOULD_SKIP_THIS
   protected:
     size_t cur_row;      // Which row/col is currently active?
     size_t cur_col;
@@ -522,8 +546,8 @@ namespace web {
     using parent_t = internal::WidgetFacet<TableWidget>;
 
     /// Get a properly cast version of info.
-    internal::TableInfo * Info() { return (internal::TableInfo *) info; }
-    internal::TableInfo * const Info() const { return (internal::TableInfo *) info; }
+//    internal::TableInfo * Info() { return (internal::TableInfo *) info; }
+    /* const */ internal::TableInfo * Info() const { return (internal::TableInfo *) info; }
 
     TableWidget(internal::TableInfo * in_info, size_t _row=0, size_t _col=0)
      : WidgetFacet(in_info), cur_row(_row), cur_col(_col) { ; }
@@ -587,14 +611,17 @@ namespace web {
     void ClearCells() { Info()->ClearTableCells(); }
     void ClearCell(size_t r, size_t c) { Info()->ClearCell(r, c); }
 
-    TableCell GetCell(size_t r, size_t c) const;  ///< Focus on a specifc cell in the table.
-    TableRow GetRow(size_t r) const;              ///< Focus on a specifc row in the table.
-    TableCol GetCol(size_t c) const;              ///< Focus on a specifc column in the table.
-    TableRowGroup GetRowGroup(size_t r) const;    ///< Focus on a specifc group of rows in the table.
-    TableColGroup GetColGroup(size_t c) const;    ///< Focus on a specifc group of columns in the table.
+    TableCell GetCell(size_t r, size_t c) const;  ///< Focus on a specific cell in the table.
+    TableRow GetRow(size_t r) const;              ///< Focus on a specific row in the table.
+    TableCol GetCol(size_t c) const;              ///< Focus on a specific column in the table.
+    TableRow operator[](size_t r) const;          ///< Indexing shortcut to get a row.
+    TableRow GetLastRow() const;                  ///< Focus the final row in the table.
+    TableCol GetLastCol() const;                  ///< Focus the final column in the table.
+    TableRowGroup GetRowGroup(size_t r) const;    ///< Focus on a specific group of rows in the table.
+    TableColGroup GetColGroup(size_t c) const;    ///< Focus on a specific group of columns in the table.
     Table GetTable() const;                       ///< Focus on a the entire table.
 
-    /// Get the TExt widget assoited with the currently active cell.
+    /// Get the Text widget associated with the currently active cell.
     web::Text GetTextWidget() { return Info()->GetTextWidget(); }
 
     /// Add text to a specified cell in the table.
@@ -668,6 +695,18 @@ namespace web {
       return *this;
     }
 
+    // Add a single new Row to the table.
+    TableRow AddRow();
+
+    // Add a single new Column to the table.
+    TableCol AddCol();
+
+    // Remove the last row in the table.
+    TableRow RemoveRow();
+
+    // Remove the last column in the table.
+    TableCol RemoveCol();
+
     /// Fully resize the table (both rows and columns)
     Table & Resize(size_t r, size_t c) {
       Info()->Resize(r, c);
@@ -717,7 +756,8 @@ namespace web {
       return *this;
     }
 
-    /// Apply CSS to all rows.  (@CAO: Should we use fancier jquery here?)
+    /// Apply CSS to all rows.
+    // (@CAO: Should we use fancier javascript here?)
     template <typename SETTING_TYPE>
     Table & RowsCSS(const std::string & setting, SETTING_TYPE && value) {
       for (auto & row : Info()->rows) row.extras.style.Set(setting, emp::to_string(value));
@@ -764,6 +804,18 @@ namespace web {
     return TableCol(Info(), c);
   }
 
+  TableRow TableWidget::operator[](size_t r) const {
+    return GetRow(r);
+  }
+
+  TableRow TableWidget::GetLastRow() const {
+    return TableRow(Info(), Info()->row_count - 1);
+  }
+
+  TableCol TableWidget::GetLastCol() const {
+    return TableCol(Info(), Info()->col_count - 1);
+  }
+
   TableRowGroup TableWidget::GetRowGroup(size_t r) const {
     emp_assert(r < Info()->row_count, r, Info()->row_count, GetID());
     return TableRowGroup(Info(), r);
@@ -788,6 +840,34 @@ namespace web {
     cell << text;
     cell.SetHeader();
     return *this;
+  }
+
+  //============  Table 
+
+  // Add a single new Row to the table.
+  TableRow Table::AddRow() {
+    Rows(GetNumRows()+1);
+    return GetLastRow();
+  }
+
+  // Add a single new Column to the table.
+  TableCol Table::AddCol() {
+    Cols(GetNumCols()+1);
+    return GetLastCol();
+  }
+
+  // Add a single new Row to the table.
+  TableRow Table::RemoveRow() {
+    emp_assert(GetNumRows() > 0);
+    Rows(GetNumRows()-1);
+    return GetLastRow();
+  }
+
+  // Add a single new Column to the table.
+  TableCol Table::RemoveCol() {
+    emp_assert(GetNumCols() > 0);
+    Cols(GetNumCols()-1);
+    return GetLastCol();
   }
 
 }

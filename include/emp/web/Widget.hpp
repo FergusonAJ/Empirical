@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2024
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2022.
- *
- *  @file Widget.hpp
+ *  @file
  *  @brief Widgets maintain individual components on a web page and link to Elements
  *
  *  Each HTML Widget has all of its details stored in a WidgetInfo object; Multiple Widgets can
@@ -33,6 +34,7 @@
 #define EMP_WEB_WIDGET_HPP_INCLUDE
 
 
+#include <stddef.h>
 #include <string>
 
 #include "../base/error.hpp"
@@ -83,7 +85,9 @@ namespace web {
   class Widget {
     friend internal::WidgetInfo; friend internal::DivInfo; friend internal::TableInfo;
   protected:
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
     using WidgetInfo = internal::WidgetInfo;
+    #endif /*DOXYGEN_SHOULD_SKIP_THIS*/
     WidgetInfo * info;                        ///< Information associated with this widget.
 
     /// If an Append doesn't work with current class, forward it to the parent and try there.
@@ -134,6 +138,7 @@ namespace web {
 
     bool IsButton()   const { return GetInfoTypeName() == "ButtonInfo"; }
     bool IsCanvas()   const { return GetInfoTypeName() == "CanvasInfo"; }
+    bool IsCheckBox() const { return GetInfoTypeName() == "CheckBoxInfo"; }
     bool IsDiv()      const { return GetInfoTypeName() == "DivInfo"; }
     bool IsImage()    const { return GetInfoTypeName() == "ImageInfo"; }
     bool IsInput()    const { return GetInfoTypeName() == "InputInfo"; }
@@ -160,13 +165,13 @@ namespace web {
     /// Determine is an attribute has been set on this Widget.
     virtual bool HasAttr(const std::string & setting);
 
-    /// Are two Widgets refering to the same HTML object?
+    /// Are two Widgets referring to the same HTML object?
     bool operator==(const Widget & in) const { return info == in.info; }
 
-    /// Are two Widgets refering to different HTML objects?
+    /// Are two Widgets referring to different HTML objects?
     bool operator!=(const Widget & in) const { return info != in.info; }
 
-    /// Conver Widget to bool (I.e., is this Widget active?)
+    /// Convert Widget to bool (I.e., is this Widget active?)
     operator bool() const { return info != nullptr; }
 
     const std::string & GetTitle() const { return GetAttr("title"); }  /// Get current tooltip on this widget.
@@ -380,7 +385,8 @@ namespace web {
         MAIN_THREAD_EM_ASM({
             var widget_id = UTF8ToString($0);
             var out_html = UTF8ToString($1);
-            $('#' + widget_id).replaceWith(out_html);
+            var element = document.getElementById(widget_id);
+            if (element) element.outerHTML = out_html;
           }, id.c_str(), ss.str().c_str());
 
         // If active update style, trigger JS, and recurse to children!
@@ -472,9 +478,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      var rect = $('#' + id).position();
-      if (rect === undefined) return -1.0;
-      return rect.left;
+      var element = document.getElementById(id);
+      if (!element) return -1.0; // Check if element exists
+      return element.offsetLeft;
     }, GetID().c_str());
   }
 
@@ -483,9 +489,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      var rect = $('#' + id).position();
-      if (rect === undefined) return -1.0;
-      return rect.top;
+      var element = document.getElementById(id);
+      if (!element) return -1.0; // Check if element exists
+      return element.offsetTop;
     }, GetID().c_str());
   }
 
@@ -494,7 +500,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).width();
+      var element = document.getElementById(id);
+      if (!element) return -1.0; // Check if element exists
+      return element.clientWidth;
     }, GetID().c_str());
   }
   double Widget::GetHeight(){
@@ -502,7 +510,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).height();
+      var element = document.getElementById(id);
+      if (!element) return -1.0; // Check if element exists
+      return element.clientHeight;
     }, GetID().c_str());
   }
   double Widget::GetInnerWidth(){
@@ -510,7 +520,14 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).innerWidth();
+      var element = document.getElementById(id);
+      if (!element) return 0.0; // Check if element exists
+      var style = window.getComputedStyle(element);
+      return (
+        element.clientWidth
+        - parseFloat(style.paddingLeft)
+        - parseFloat(style.paddingRight)
+      );
     }, GetID().c_str());
   }
   double Widget::GetInnerHeight(){
@@ -518,7 +535,14 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).innerHeight();
+      var element = document.getElementById(id);
+      if (!element) return 0.0; // Check if element exists
+      var style = window.getComputedStyle(element);
+      return (
+        element.clientHeight
+        - parseFloat(style.paddingTop)
+        - parseFloat(style.paddingBottom)
+      );
     }, GetID().c_str());
   }
   double Widget::GetOuterWidth(){
@@ -526,7 +550,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).outerWidth();
+      var element = document.getElementById(id);
+      if (!element) return 0.0; // Check if element exists
+      return element.offsetWidth;
     }, GetID().c_str());
   }
   double Widget::GetOuterHeight(){
@@ -534,7 +560,9 @@ namespace web {
     emp_assert(GetID() != "");  // Must have a name!
     return MAIN_THREAD_EM_ASM_DOUBLE({
       var id = UTF8ToString($0);
-      return $('#' + id).outerHeight();
+      var element = document.getElementById(id);
+      if (!element) return 0.0; // Check if element exists
+      return element.offsetHeight;
     }, GetID().c_str());
   }
 
@@ -591,21 +619,21 @@ namespace web {
     class WidgetFacet : public Widget {
     protected:
       /// WidgetFacet cannot be built unless within derived class, so constructors are protected
-      WidgetFacet(const std::string & in_id="") : Widget(in_id) { ; }
-      WidgetFacet(const WidgetFacet & in) : Widget(in) { ; }
+      WidgetFacet(const std::string & in_id="") : Widget(in_id) { }
+      WidgetFacet(const WidgetFacet & in) : Widget(in) { }
       WidgetFacet(const Widget & in) : Widget(in) {
         // Converting from a generic widget; make sure type is correct or non-existant!
         emp_assert(!in || dynamic_cast<typename RETURN_TYPE::INFO_TYPE *>( Info(in) ) != NULL,
                    in.GetID());
       }
-      WidgetFacet(WidgetInfo * in_info) : Widget(in_info) { ; }
+      WidgetFacet(WidgetInfo * in_info) : Widget(in_info) { }
       WidgetFacet & operator=(const WidgetFacet & in) { Widget::operator=(in); return *this; }
       virtual ~WidgetFacet() { ; }
 
       /// CSS-related options may be overridden in derived classes that have multiple styles.
       /// By default DoCSS will track the new information and apply it (if active) to the widget.
       virtual void DoCSS(const std::string & setting, const std::string & value) {
-        info->extras.style.DoSet(setting, value);
+        info->extras.style.Set(setting, value);
         if (IsActive()) Style::Apply(info->id, setting, value);
       }
 
@@ -617,7 +645,7 @@ namespace web {
       /// Attr-related options may be overridden in derived classes that have multiple attributes.
       /// By default DoAttr will track the new information and apply it (if active) to the widget.
       virtual void DoAttr(const std::string & setting, const std::string & value) {
-        info->extras.attr.DoSet(setting, value);
+        info->extras.attr.Set(setting, value);
         if (IsActive()) Attributes::Apply(info->id, setting, value);
       }
 
@@ -806,6 +834,21 @@ namespace web {
       /// Provide a function to be called whenever text is pasted in this Widget.
       template <typename T> return_t & OnPaste(T && arg) { return On("paste", arg); }
 
+      /// Trigger a click on this widget.
+
+      return_t & DoClick() {
+#ifdef __EMSCRIPTEN__
+        MAIN_THREAD_EM_ASM({
+          var id = UTF8ToString($0);
+          var element = document.getElementById(id);
+          if (element) element.click();
+        }, info->id.c_str());
+#else
+        emp::notify::Message("Triggering click on '", info->id, "'.");
+#endif
+        return (return_t &) *this;
+      }
+
       /// Create a tooltip for this Widget.
       return_t & SetTitle(const std::string & _in) { return SetAttr("title", _in); }
 
@@ -873,7 +916,7 @@ namespace web {
         { return SetPosition(x, y, unit, "fixed", "left", "bottom"); }
 
 
-      /// Set this Widget to float appropriately within its containter.
+      /// Set this Widget to float appropriately within its container.
       return_t & SetFloat(const std::string & f="left") { return SetCSS("float", f); }
 
       /// Setup how this Widget should handle overflow.
@@ -914,6 +957,9 @@ namespace web {
 
       /// Align text to be centered.
       return_t & SetCenterText() { return SetCSS("text-align", "center"); }
+
+      /// Align text to be vertically centered.
+      return_t & SetMiddleText() { return SetCSS("vertical-align", "middle"); }
 
       /// Set the background color of this Widget.
       return_t & SetBackground(const std::string & v) { return SetCSS("background-color", v); }

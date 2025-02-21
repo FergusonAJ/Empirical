@@ -1,14 +1,15 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file events.hpp
- *  @brief Event handlers that use JQuery.
+ *  @file
+ *  @brief Event handlers
  *
  *  @todo Events can be further sub-divided and built up (similar to DataNode objects) so that we
  *    save only the information that we're planning to use.  This may be slightly faster (given
- *    how frequently some of these like mouse move might be used), but likely to be more compelx.
+ *    how frequently some of these like mouse move might be used), but likely to be more complex.
  *  @todo An alternative speed-up might be to save the current event somewhere in emp_i on the
  *    Javascript side, and then just request the information that we might need.  This approach
  *    should be easier to implement, but since everything would be copied anyway in such as case,
@@ -18,6 +19,7 @@
 #ifndef EMP_WEB_EVENTS_HPP_INCLUDE
 #define EMP_WEB_EVENTS_HPP_INCLUDE
 
+#include <stddef.h>
 #include <utility>
 
 #include "JSWrap.hpp"
@@ -31,7 +33,12 @@ namespace web {
     const size_t fun_id = JSWrap(std::forward<FUN_TYPE>(fun), "", true);
     (void) fun_id;
 
-    MAIN_THREAD_EM_ASM({  $( document ).ready(function() { emp.Callback($0); });  }, fun_id);
+    MAIN_THREAD_EM_ASM({
+      if (document.readyState !== 'loading') emp.Callback($0);
+      else document.addEventListener('DOMContentLoaded', function() {
+          emp.Callback($0);
+      });
+    }, fun_id);
   }
 
   /// Runs the specified function when the document is finished loading.
@@ -41,7 +48,9 @@ namespace web {
     (void) fun_id;
 
     MAIN_THREAD_EM_ASM({
-        $( window ).on( "load", function() { emp.Callback($0); });
+        window.addEventListener("load", function() {
+          emp.Callback($0);
+        });
       },
       fun_id
     );

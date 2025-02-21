@@ -1,10 +1,11 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2020.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2020.
- *
- *  @file _native_assert_trigger.hpp
- *  @brief Native asssert trigger implementation.
+ *  @file
+ *  @brief Native assert trigger implementation.
  *  @note For internal use.
  */
 
@@ -13,9 +14,10 @@
 
 #include <iostream>
 #include <sstream>
+#include <stddef.h>
 #include <string>
 
-#include "_is_streamable.hpp"
+#include "concepts.hpp"
 
 namespace emp {
 
@@ -27,7 +29,7 @@ namespace emp {
   /// Print out information about the next variable and recurse...
   template <typename T, typename... EXTRA>
   void assert_print(std::string name, T && val, EXTRA &&... extra) {
-    if constexpr ( emp::is_streamable<decltype( std::cerr ), T>::value ) {
+    if constexpr ( emp::canStreamTo<decltype(std::cerr), T> ) {
       // If we had a literal string fed in, print it as a message.
       if (name[0] == '"') {
         std::cerr << "MESSAGE: " << val << std::endl;

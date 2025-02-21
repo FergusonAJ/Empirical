@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Style.hpp
+ *  @file
  *  @brief A CSS class for tracking font style, etc.
  */
 
@@ -20,22 +21,26 @@
 
 #include <map>
 #include <set>
+#include <stddef.h>
 #include <string>
 
 namespace emp {
 namespace web {
 
   ///  Class to maintain a map of setting names to values that can be easily ported
-  ///  over to JavaScript.  A companial class, Attributes, also exists.
+  ///  over to JavaScript.  A companion class, Attributes, also exists.
   class Style {
   private:
     std::map<std::string, std::string> settings;  ///< CSS Setting values being tracked.
     std::set<std::string> classes;  ///< CSS classes
 
   public:
-    Style() { ; }
+    Style() = default;
     Style(const Style &) = default;
     Style(Style &&) = default;
+    template <typename... Ts>
+    Style(Ts &&... args) { Set(std::forward<Ts>(args)...); }
+
     Style & operator=(const Style &) = default;
     Style & operator=(Style &&) = default;
 
@@ -44,22 +49,20 @@ namespace web {
     /// Return a count of the number of classes that have been added.
     size_t GetNClasses() const { return classes.size(); }
 
-   Style & AddClass(const std::string & in_clss) {
-      classes.insert(in_clss);
-      return *this;
-    }
-
-
-    Style & DoSet(const std::string & in_set, const std::string & in_val) {
-      settings[in_set] = in_val;
+   Style & AddClass(const std::string & in_class) {
+      classes.insert(in_class);
       return *this;
     }
 
     /// Record that setting "s" is set to value "v" (converted to string) and return this object.
-    template <typename SET_TYPE>
-    Style & Set(const std::string & s, SET_TYPE v) {
-      return DoSet(s, emp::to_string(v));
+    template <typename SET_TYPE, typename... EXTRA_Ts>
+    Style & Set(const std::string & s, SET_TYPE v, EXTRA_Ts &&... extras) {
+      settings[s] = emp::to_string(v);
+      return Set(std::forward<EXTRA_Ts>(extras)...);
     }
+
+    /// Null condition; Set may have no arguments.
+    Style & Set() { return *this; }
 
     /// Set all values from in_css here as well.  Return this object.
     Style & Insert(const Style & in_css) {
@@ -110,7 +113,7 @@ namespace web {
 #ifdef __EMSCRIPTEN__
       MAIN_THREAD_EM_ASM({
           var id = UTF8ToString($0);
-          emp_i.cur_obj = $( '#' + id );
+          emp_i.cur_obj = document.getElementById(id);
         }, widget_id.c_str());
 #endif
 
@@ -120,7 +123,7 @@ namespace web {
         MAIN_THREAD_EM_ASM({
             var name = UTF8ToString($0);
             var value = UTF8ToString($1);
-            emp_i.cur_obj.css( name, value);
+            if (emp_i.cur_obj) emp_i.cur_obj.style[name] = value;
           }, css_pair.first.c_str(), css_pair.second.c_str());
 #else
         std::cout << "Setting '" << widget_id << "' attribute '" << css_pair.first
@@ -133,7 +136,7 @@ namespace web {
 #ifdef EMSCRIPTEN
         EM_ASM_ARGS({
             var name = UTF8ToString($0);
-            emp_i.cur_obj.addClass( name );
+            if (emp_i.cur_obj) emp_i.cur_obj.classList.add(name);
           }, class_.c_str());
 #else
         std::cout << "Adding class to '" << widget_id << "': '" << class_;
@@ -152,7 +155,8 @@ namespace web {
           var id = UTF8ToString($0);
           var setting = UTF8ToString($1);
           var value = UTF8ToString($2);
-          $( '#' + id ).css( setting, value);
+          var element = document.getElementById(id);
+          if (element) element.style[setting] = value;
         }, widget_id.c_str(), setting.c_str(), settings[setting].c_str());
 #else
       std::cout << "Setting '" << widget_id << "' attribute '" << setting
@@ -168,7 +172,8 @@ namespace web {
           var id = UTF8ToString($0);
           var setting = UTF8ToString($1);
           var value = UTF8ToString($2);
-          $( '#' + id ).css( setting, value);
+          var element = document.getElementById(id);
+          if (element) element.style[setting] = value;
         }, widget_id.c_str(), setting.c_str(), value.c_str());
 #else
       std::cout << "Setting '" << widget_id << "' attribute '" << setting
@@ -182,7 +187,8 @@ namespace web {
       EM_ASM_ARGS({
           var id = UTF8ToString($0);
           var name = UTF8ToString($1);
-          $( '#' + id ).addClass( name);
+          var element = document.getElementById(id);
+          if (element) element.classList.add(name);
         }, widget_id.c_str(), clss.c_str());
 #else
       std::cout << "Adding class to '" << widget_id << "': '" << clss;
@@ -194,7 +200,8 @@ namespace web {
       EM_ASM_ARGS({
           var id = UTF8ToString($0);
           var name = UTF8ToString($1);
-          $( '#' + id ).removeClass( name);
+          var element = document.getElementById(id);
+          if (element) element.classList.remove(name);
         }, widget_id.c_str(), clss.c_str());
 #else
       std::cout << "Adding class to '" << widget_id << "': '" << clss;

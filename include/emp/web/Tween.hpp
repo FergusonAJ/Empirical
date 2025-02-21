@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file Tween.hpp
+ *  @file
  *  @brief A Tween manages the gradual shift in properties of one or more widgets over time.
  *
  *  To create a Tween, a duration must be specified, along with an optional default
@@ -32,9 +33,9 @@
 #ifndef EMP_WEB_TWEEN_HPP_INCLUDE
 #define EMP_WEB_TWEEN_HPP_INCLUDE
 
+#include <stddef.h>
 
 #include "emfunctions.hpp"
-
 #include "Widget.hpp"
 
 
@@ -112,7 +113,7 @@ namespace web {
       : duration(d*1000), default_target(t), running(false)
       , start_time(0.0), cur_time(0.0), run_time(0.0)
     {
-      emp::InitializeAnim();  // Make sure JS is intialized for animations.
+      emp::InitializeAnim();  // Make sure JS is initialized for animations.
       callback_id = JSWrap( std::function<void()>([this](){ this->AdvanceFrame(); }) );
     }
     ~Tween() {

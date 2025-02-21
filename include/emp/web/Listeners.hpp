@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file Listeners.hpp
+ *  @file
  *  @brief A class for tracking font event listeners for Widgets
  */
 
@@ -19,6 +20,7 @@
 #include "../tools/string_utils.hpp"
 
 #include <map>
+#include <stddef.h>
 #include <string>
 
 namespace emp {
@@ -85,7 +87,7 @@ namespace web {
 #ifdef __EMSCRIPTEN__
       MAIN_THREAD_EM_ASM({
           var id = UTF8ToString($0);
-          emp_i.cur_obj = $( '#' + id );
+          emp_i.cur_obj = document.getElementById(id);
         }, widget_id.c_str());
 #endif
 
@@ -93,7 +95,9 @@ namespace web {
 #ifdef __EMSCRIPTEN__
         MAIN_THREAD_EM_ASM({
           var name = UTF8ToString($0);
-          emp_i.cur_obj.on( name, function(evt) { emp.Callback($1, evt); } );
+          if (emp_i.cur_obj) emp_i.cur_obj.addEventListener(name, function(evt) {
+              emp.Callback($1, evt);
+          });
         }, event_pair.first.c_str(), event_pair.second);
 #else
         std::cout << "Setting '" << widget_id << "' listener '" << event_pair.first
@@ -111,7 +115,10 @@ namespace web {
         MAIN_THREAD_EM_ASM({
           var id = UTF8ToString($0);
           var name = UTF8ToString($1);
-          $( '#' + id ).on( name, function(evt) { emp.Callback($2, evt); } );
+          var element = document.getElementById(id);
+          if (element) element.addEventListener(name, function(evt) {
+              emp.Callback($2, evt);
+          });
         }, widget_id.c_str(), event_name.c_str(), fun_id);
 #else
         std::cout << "Setting '" << widget_id << "' listener '" << event_name

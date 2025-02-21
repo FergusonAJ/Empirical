@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2020-2023
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2020
- *
- *  @file string_utils.cpp
+ *  @file
  */
 
 #include "../third-party/Catch/single_include/catch2/catch.hpp"
@@ -384,7 +385,7 @@ TEST_CASE("Another Test string_utils", "[tools]")
   slices = emp::slice(
     "This is a test.",
     ' ',
-    0
+    1
   );
   CHECK(slices.size() == 1);
   CHECK(slices[0] == "This is a test.");
@@ -392,7 +393,7 @@ TEST_CASE("Another Test string_utils", "[tools]")
   slices = emp::slice(
     "This is a test.",
     ' ',
-    1
+    2
   );
   CHECK(slices.size() == 2);
   CHECK(slices[0] == "This");
@@ -401,7 +402,7 @@ TEST_CASE("Another Test string_utils", "[tools]")
   slices = emp::slice(
     "This is a test.",
     ' ',
-    2
+    3
   );
   CHECK(slices.size() == 3);
   CHECK(slices[0] == "This");
@@ -481,35 +482,35 @@ TEST_CASE("Another Test string_utils", "[tools]")
   // tests adapted from https://stackoverflow.com/questions/5288396/c-ostream-out-manipulation/5289170#5289170
   std::string els[] = { "aap", "noot", "mies" };
 
-  typedef emp::vector<std::string> strings;
+  using strings = emp::vector<std::string>;
 
-  CHECK( ""  == emp::join_on(strings(), "") );
-  CHECK( "" == emp::join_on(strings(), "bla") );
-  CHECK( "aap" == emp::join_on(strings(els, els + 1), "") );
-  CHECK( "aap" == emp::join_on(strings(els, els + 1), "#") );
-  CHECK( "aap" == emp::join_on(strings(els, els + 1), "##") );
-  CHECK( "aapnoot" == emp::join_on(strings(els, els + 2), "") );
-  CHECK( "aap#noot" == emp::join_on(strings(els, els + 2), "#") );
-  CHECK( "aap##noot" == emp::join_on(strings(els, els + 2), "##") );
-  CHECK( "aapnootmies" == emp::join_on(strings(els, els + 3), "") );
-  CHECK( "aap#noot#mies" == emp::join_on(strings(els, els + 3), "#") );
-  CHECK( "aap##noot##mies" == emp::join_on(strings(els, els + 3), "##") );
-  CHECK( "aap  noot  mies" == emp::join_on(strings(els, els + 3), "  ") );
-  CHECK( "aapnootmies" == emp::join_on(strings(els, els + 3), "\0"));
+  CHECK( ""  == emp::join(strings(), "") );
+  CHECK( "" == emp::join(strings(), "bla") );
+  CHECK( "aap" == emp::join(strings(els, els + 1), "") );
+  CHECK( "aap" == emp::join(strings(els, els + 1), "#") );
+  CHECK( "aap" == emp::join(strings(els, els + 1), "##") );
+  CHECK( "aapnoot" == emp::join(strings(els, els + 2), "") );
+  CHECK( "aap#noot" == emp::join(strings(els, els + 2), "#") );
+  CHECK( "aap##noot" == emp::join(strings(els, els + 2), "##") );
+  CHECK( "aapnootmies" == emp::join(strings(els, els + 3), "") );
+  CHECK( "aap#noot#mies" == emp::join(strings(els, els + 3), "#") );
+  CHECK( "aap##noot##mies" == emp::join(strings(els, els + 3), "##") );
+  CHECK( "aap  noot  mies" == emp::join(strings(els, els + 3), "  ") );
+  CHECK( "aapnootmies" == emp::join(strings(els, els + 3), "\0"));
   CHECK(
     "aapnootmies"
     ==
-    emp::join_on(strings(els, els + 3), std::string("\0" , 1).c_str())
+    emp::join(strings(els, els + 3), std::string("\0" , 1).c_str())
   );
   CHECK(
     "aapnootmies"
     ==
-    emp::join_on(strings(els, els + 3), std::string("\0+", 2).c_str())
+    emp::join(strings(els, els + 3), std::string("\0+", 2).c_str())
   );
   CHECK(
     "aap+noot+mies"
     ==
-    emp::join_on(strings(els, els + 3), std::string("+\0", 2).c_str())
+    emp::join(strings(els, els + 3), std::string("+\0", 2).c_str())
   );
 
   emp::string_vec_t string_v;

@@ -1,15 +1,17 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file emfunctions.hpp
+ *  @file
  *  @brief Specialized, useful function for Empirical.
  */
 
 #ifndef EMP_WEB_EMFUNCTIONS_HPP_INCLUDE
 #define EMP_WEB_EMFUNCTIONS_HPP_INCLUDE
 
+#include <cstdint>
 #include <functional>
 
 #include "../debug/alert.hpp"
@@ -63,14 +65,14 @@ namespace emp {
   static void SetBackgroundColor(const std::string color) {
     MAIN_THREAD_ASYNC_EM_ASM({
         var color = UTF8ToString($0);
-        $("body").first().css("background-color", color);
+        document.body.style.backgroundColor = color;
       }, color.c_str());
   }
 
   static void SetColor(const std::string color) {
     MAIN_THREAD_ASYNC_EM_ASM({
         var color = UTF8ToString($0);
-        $("body").first().css("color", color);
+        document.body.style.color = color;
       }, color.c_str());
   }
 
@@ -105,19 +107,35 @@ namespace emp {
     return html.str();
   }
 
-    /// Get the value of @param attribute in the element with @param id as its id.
-    inline std::string GetElementAttribute(const std::string & id, const std::string & attribute) {
-      char * buffer = (char * )MAIN_THREAD_EM_ASM_INT({
-        var text = document.getElementById(UTF8ToString($0))[UTF8ToString($1)];
-        var buffer = Module._malloc(text.length+1);
-        Module.stringToUTF8(text, buffer, text.length*4+1);
-        return buffer;
-      }, id.c_str(), attribute.c_str());
+  /// Get the value of @param attribute in the element with @param id as its id.
+  inline std::string GetElementAttribute(const std::string & id, const std::string & attribute) {
+    char * buffer = (char * )MAIN_THREAD_EM_ASM_INT({
+      var text = document.getElementById(UTF8ToString($0))[UTF8ToString($1)];
+      var buffer = Module._malloc(text.length+1);
+      Module.stringToUTF8(text, buffer, text.length*4+1);
+      return buffer;
+    }, id.c_str(), attribute.c_str());
 
-      std::string result = std::string(buffer);
-      free(buffer);
-      return result;
-    }
+    std::string result = std::string(buffer);
+    free(buffer);
+    return result;
+  }
+
+  inline void DownloadFile(std::string filename, std::string content) {    
+    MAIN_THREAD_ASYNC_EM_ASM({
+      var filename = UTF8ToString($0);
+      var content = UTF8ToString($1);
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, filename.c_str(), content.c_str());
+  }
 
 }
 

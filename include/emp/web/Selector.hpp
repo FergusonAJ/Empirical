@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Selector.hpp
+ *  @file
  *  @brief Specs for the Selector widget.
  *
  *  A Selector widget provides the user with a pull-down menu.  It can be
@@ -24,6 +25,7 @@
 #ifndef EMP_WEB_SELECTOR_HPP_INCLUDE
 #define EMP_WEB_SELECTOR_HPP_INCLUDE
 
+#include <stddef.h>
 
 #include "../base/vector.hpp"
 
@@ -41,7 +43,7 @@ namespace web {
       friend Selector;
     protected:
       emp::vector<std::string> options;               ///< What are the options to choose from?
-      emp::vector<std::function<void()> > callbacks;  ///< Which funtion to run for each option?
+      emp::vector<std::function<void()> > callbacks;  ///< Which function to run for each option?
       size_t select_id;                               ///< Which index is currently selected?
 
       bool autofocus;
@@ -108,7 +110,7 @@ namespace web {
     };  // End of SelectorInfo class.
     #endif // DOXYGEN_SHOULD_SKIP_THIS
 
-    // Get a properly cast version of indo.
+    // Get a properly cast version of info.
     SelectorInfo * Info() { return (SelectorInfo *) info; }
     const SelectorInfo * Info() const { return (SelectorInfo *) info; }
 

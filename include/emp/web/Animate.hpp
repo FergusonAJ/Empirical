@@ -1,22 +1,23 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Animate.hpp
+ *  @file
  *  @brief Manage animations on a web site.
  *
  *  To build an animation, you must provide a function to be run repeatedly.  When Start()
  *  is triggered, the function will be called 60 time per second (or as close as possible),
- *  until Stop() is caled.
+ *  until Stop() is called.
  *
  */
 
 #ifndef EMP_WEB_ANIMATE_HPP_INCLUDE
 #define EMP_WEB_ANIMATE_HPP_INCLUDE
 
-
 #include <functional>
+#include <stddef.h>
 
 #include "../base/assert.hpp"
 #include "../base/vector.hpp"
@@ -61,7 +62,6 @@ namespace web {
 
   class Animate {
   protected:
-
     /// The full version of the animate function takes a const reference to the animate object.
     using anim_fun_t = std::function<void(const Animate &)>;
 
@@ -69,7 +69,7 @@ namespace web {
     emp::vector<web::Widget> targets;   ///< What widgets should be refreshed after each frame?
     bool active;                        ///< Is this animation currently running?
     bool do_step;                       ///< Should this animation take just a single step?
-    size_t callback_id;                 ///< Intenral ID for javascript to call back AdvanceFrame()
+    size_t callback_id;                 ///< Internal ID for javascript to call back AdvanceFrame()
 
     double start_time;                  ///< At what time did this animation most recently start?
     double prev_time;                   ///< What was the time point of the previous frame?
@@ -79,9 +79,9 @@ namespace web {
     int frame_count;                    ///< How many animation frames have gone by?
 
     Button toggle_but;                  ///< A button to start/stop this animation.
-
     Button step_but;                    ///< A button to advance this animation one step.
 
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
     void LoadTargets() { ; }
     template <typename... T>
     void LoadTargets(const web::Widget & target1, const T&... other_targets) {
@@ -108,6 +108,7 @@ namespace web {
 
       frame_count++;
     }
+    #endif // DOXYGEN_SHOULD_SKIP_THIS
 
     /// DoFrame() is called by default if no animation function is provided.  As such, an animation
     /// can be built by deriving a class from Animate and overriding this function.
@@ -115,11 +116,11 @@ namespace web {
 
   public:
     /// Setup an Animate object to call an anim_fun as fast as possible, at most 60 times a second.
-    /// Call virtual function DoFrame() if no other functon is provided (which can be overridden
+    /// Call virtual function DoFrame() if no other function is provided (which can be overridden
     /// if you derive a new class from Animate)
     Animate() : active(false), do_step(false), run_time(0.0), frame_count(0)
     {
-      emp::InitializeAnim();  // Make sure JS is intialized for animations.
+      emp::InitializeAnim();  // Make sure JS is initialized for animations.
       callback_id = JSWrap( std::function<void()>([this](){ this->AdvanceFrame(); }) );
     }
 
@@ -150,7 +151,7 @@ namespace web {
     void Start() {
       if (active) return;          // If animation is already active, ignore start.
       active=true;                 // Mark active.
-      do_step=false;               // Shouild be continuously active.
+      do_step=false;               // Should be continuously active.
       start_time = emp::GetTime(); // Record the time that we started the animation.
       cur_time = start_time;       // Initialize cur_time to now.
       AdvanceFrame();              // Take the first animation step to get going.

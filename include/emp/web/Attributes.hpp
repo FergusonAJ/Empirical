@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file Attributes.hpp
+ *  @file
  *  @brief An Attributes class for tracking non-style features about HTML objects
  */
 
@@ -39,8 +40,10 @@ namespace web {
     /// Return a count of the number of attributes that have been set.
     int GetSize() const { return (int) settings.size(); }
 
-    Attributes & DoSet(const std::string & in_set, const std::string & in_val) {
-      settings[in_set] = in_val;
+    /// Record that attribute "a" is set to value "v" (converted to string) and return this object.
+    template <typename SET_TYPE>
+    Attributes & Set(const std::string & s, SET_TYPE v) {
+      settings[s] = emp::to_string(v);
       return *this;
     }
 
@@ -49,8 +52,8 @@ namespace web {
     /// @param in_val attribute value to be added
     Attributes & DoAddAttr(const std::string in_attr, const std::string & in_val) {
       if (!Has(in_attr)){
-        // Attribute has not been assigned to this Widget. Add it with DoSet instead
-        DoSet(in_attr, in_val);
+        // Attribute has not been assigned to this Widget. Add it with Set instead
+        Set(in_attr, in_val);
       } else if(settings[in_attr].find(in_val) == std::string::npos){
         // New value is not a duplicate of any values assigned to this attribute. Append it.
         settings[in_attr] += " " + in_val;
@@ -60,12 +63,6 @@ namespace web {
 
     std::string GetAttrValue(const std::string & in_set){
       return settings[in_set];
-    }
-
-    /// Record that attribute "a" is set to value "v" (converted to string) and return this object.
-    template <typename SET_TYPE>
-    Attributes & Set(const std::string & s, SET_TYPE v) {
-      return DoSet(s, emp::to_string(v));
     }
 
     /// Set all values from in_attr here as well.  Return this object.
@@ -106,7 +103,7 @@ namespace web {
 #ifdef __EMSCRIPTEN__
       MAIN_THREAD_EM_ASM({
           var id = UTF8ToString($0);
-          emp_i.cur_obj = $( '#' + id );
+          emp_i.cur_obj = document.getElementById(id);
         }, widget_id.c_str());
 #endif
 
@@ -116,7 +113,7 @@ namespace web {
         MAIN_THREAD_EM_ASM({
             var name = UTF8ToString($0);
             var value = UTF8ToString($1);
-            emp_i.cur_obj.attr( name, value);
+            if (emp_i.cur_obj) emp_i.cur_obj.setAttribute(name, value);
           }, attr_pair.first.c_str(), attr_pair.second.c_str());
 #else
         std::cout << "Setting '" << widget_id << "' attribute '" << attr_pair.first
@@ -134,7 +131,8 @@ namespace web {
           var id = UTF8ToString($0);
           var setting = UTF8ToString($1);
           var value = UTF8ToString($2);
-          $( '#' + id ).attr( setting, value);
+          var element = document.getElementById(id);
+          if (element) element.setAttribute(setting, value);
         }, widget_id.c_str(), setting.c_str(), settings[setting].c_str());
 #else
       std::cout << "Setting '" << widget_id << "' attribute '" << setting
@@ -142,7 +140,7 @@ namespace web {
 #endif
     }
 
-    /// Apply onlay a SPECIFIC attributes setting with a specifid value!
+    /// Apply only a SPECIFIC attributes setting with a specifid value!
     static void Apply(const std::string & widget_id, const std::string & setting,
                       const std::string & value) {
 #ifdef __EMSCRIPTEN__
@@ -150,7 +148,8 @@ namespace web {
           var id = UTF8ToString($0);
           var setting = UTF8ToString($1);
           var value = UTF8ToString($2);
-          $( '#' + id ).attr( setting, value);
+          var element = document.getElementById(id);
+          if (element) element.setAttribute(setting, value);
         }, widget_id.c_str(), setting.c_str(), value.c_str());
 #else
       std::cout << "Setting '" << widget_id << "' attribute '" << setting

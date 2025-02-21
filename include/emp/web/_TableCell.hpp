@@ -1,16 +1,19 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2017-2018.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2017-2018.
- *
- *  @file _TableCell.hpp
+ *  @file
  *  @brief The TableCell widget, which behaves like the Table widget, but focuses on a single cell.
  *
- *  DO NOT include this file directly.  All files begining with '_' are for internal use only.
+ *  DO NOT include this file directly.  All files beginning with '_' are for internal use only.
  */
 
 #ifndef EMP_WEB__TABLECELL_HPP_INCLUDE
 #define EMP_WEB__TABLECELL_HPP_INCLUDE
+
+#include <stddef.h>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
@@ -32,7 +35,7 @@ namespace web {
       if (IsActive()) Info()->ReplaceHTML();   // @CAO only should replace cell's CSS
     }
 
-    /// Udpate the attributes for this cell (override default Table)
+    /// Update the attributes for this cell (override default Table)
     void DoAttr(const std::string & setting, const std::string & value) override {
       Info()->rows[cur_row].data[cur_col].extras.attr.Set(setting, value);
       if (IsActive()) Info()->ReplaceHTML();   // @CAO only should replace cell's CSS

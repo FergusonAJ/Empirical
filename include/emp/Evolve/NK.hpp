@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016-2018
- *
- *  @file NK.hpp
+ *  @file
  *  @brief This file provides code to build NK-based algorithms.
  *
  *  Two version of landscapes are provided.  NKLandscape pre-calculates the entire landscape, for
@@ -19,6 +20,7 @@
 #define EMP_EVOLVE_NK_HPP_INCLUDE
 
 #include <array>
+#include <stddef.h>
 
 #include "../base/vector.hpp"
 #include "../bits/BitVector.hpp"
@@ -48,14 +50,14 @@ namespace emp {
 
   class NKLandscape {
   private:
-    size_t N;             ///< The number of bits in each genome.
-    size_t K;             ///< The number of OTHER bits with which each bit is epistatic.
-    size_t state_count;   ///< The total number of states associated with each bit table.
-    size_t total_count;   ///< The total number of states in the entire landscape space.
+    size_t N = 0;             ///< The number of bits in each genome.
+    size_t K = 0;             ///< The number of OTHER bits with which each bit is epistatic.
+    size_t state_count = 0;   ///< The total number of states associated with each bit table.
+    size_t total_count = 0;   ///< The total number of states in the entire landscape space.
     emp::vector< emp::vector<double> > landscape;  ///< The actual values in the landscape.
 
   public:
-    NKLandscape() : N(0), K(0), state_count(0), total_count(0), landscape() { ; }
+    NKLandscape() = default;
     NKLandscape(const NKLandscape &) = default;
     NKLandscape(NKLandscape &&) = default;
 
@@ -70,7 +72,8 @@ namespace emp {
     {
       Reset(random);
     }
-    ~NKLandscape() { ; }
+    ~NKLandscape() = default;
+
     NKLandscape & operator=(const NKLandscape &) = delete;
     NKLandscape & operator=(NKLandscape &&) = default;
 
@@ -155,6 +158,21 @@ namespace emp {
       return GetFitness(n, cur_val);
     }
 
+   /// Get the fitness of a whole bitstring (pass by value so can be modified.)
+    emp::vector<double> GetFitnesses(emp::BitVector genome) const {
+      // Use a double-length genome to easily handle wrap-around.
+      genome.Resize(N*2);
+      genome |= (genome << N);
+      emp::vector<double> fits;
+
+      size_t mask = emp::MaskLow<size_t>(K+1);
+      for (size_t i = 0; i < N; i++) {
+        const size_t cur_val = (genome >> i).GetUInt(0) & mask;
+        const double cur_fit = GetFitness(i, cur_val);
+        fits.push_back(cur_fit);
+      }
+      return fits;
+    }
 
     void SetState(size_t n, size_t state, double in_fit) { landscape[n][state] = in_fit; }
 
@@ -193,7 +211,7 @@ namespace emp {
         for (size_t k = 0; k < K; k++) masks[n][(n+k)%N] = 1;
       }
     }
-    ~NKLandscapeMemo() { ; }
+    ~NKLandscapeMemo() = default;
     NKLandscapeMemo & operator=(const NKLandscapeMemo &) = delete;
     NKLandscapeMemo & operator=(NKLandscapeMemo &&) = default;
 

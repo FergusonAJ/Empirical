@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2024
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file TextArea.hpp
+ *  @file
  *  @brief Specs for the TextArea widget.
  *
  *
@@ -12,6 +13,8 @@
 
 #ifndef EMP_WEB_TEXTAREA_HPP_INCLUDE
 #define EMP_WEB_TEXTAREA_HPP_INCLUDE
+
+#include <cstdint>
 
 #include "Widget.hpp"
 
@@ -31,14 +34,14 @@ namespace web {
     class TextAreaInfo : public internal::WidgetInfo {
       friend TextArea;
     protected:
-      int cols;                 ///< How many columns of text in the area?
-      int rows;                 ///< How many rows of text in the area?
-      int max_length;           ///< Maximum number of total characters allowed.
+      int cols = 20;            ///< How many columns of text in the area?
+      int rows = 1;             ///< How many rows of text in the area?
+      int max_length = -1;      ///< Maximum number of total characters allowed.
 
       std::string cur_text;     ///< Text that should currently be in the box.
 
-      bool autofocus;           ///< Should this TextArea be set as Autofocus?
-      bool disabled;            ///< Should this TextArea be disabled?
+      bool autofocus = false;   ///< Should this TextArea be set as Autofocus?
+      bool disabled = false;    ///< Should this TextArea be disabled?
 
       std::function<void(const std::string &)> callback; ///< Function to call with each keypress.
       uint32_t callback_id;     ///< Callback ID the built-in function for this text area.
@@ -63,11 +66,11 @@ namespace web {
         HTML << "<textarea ";                                   // Start the textarea tag.
         if (disabled) { HTML << " disabled=true"; }             // Check if should be disabled
         HTML << " id=\"" << id << "\"";                         // Indicate ID.
-        HTML << " onkeyup=\"emp.Callback(" << callback_id << ", $(this).val())\"";
+        HTML << " onkeyup=\"emp.Callback(" << callback_id << ", event.target.value)\"";
         HTML << " rows=\"" << rows << "\""
              << " cols=\"" << cols << "\"";
         if (max_length >= 0) { HTML << " maxlength=\"" << max_length << "\""; }
-        HTML << ">" << cur_text << "</textarea>";              // Close and label the textarea
+        HTML << ">" << cur_text << "</textarea>";               // Close and label the textarea
       }
 
       void UpdateAutofocus(bool in_af) {
@@ -85,10 +88,12 @@ namespace web {
       }
 
       void UpdateText(const std::string & in_string) {
+        cur_text = in_string;
         MAIN_THREAD_EM_ASM({
             var id = UTF8ToString($0);
             var text = UTF8ToString($1);
-            $('#' + id).val(text);
+            var element = document.getElementById(id);
+            if (element) element.value = text;
           }, id.c_str(), in_string.c_str());
       }
 
@@ -109,13 +114,6 @@ namespace web {
       : WidgetFacet(in_id)
     {
       info = new TextAreaInfo(in_id);
-
-      Info()->cols = 20;
-      Info()->rows = 1;
-      Info()->max_length = -1;
-      Info()->cur_text = "";
-      Info()->autofocus = false;
-      Info()->disabled = false;
 
       TextAreaInfo * ta_info = Info();
       Info()->callback_id = JSWrap( std::function<void(std::string)>(
@@ -149,12 +147,16 @@ namespace web {
       return *this;
     }
 
+    /// Change the callback to simply update a provided String.
+    TextArea & SetCallback(std::string & in_var) {
+      return SetCallback([&in_var](const std::string & new_str){ in_var = new_str; });
+    }
+
     /// Gray out this text area.
     TextArea & SetDisabled(bool in_dis) { Info()->UpdateDisabled(in_dis); return *this; }
 
     /// Set the text contained in the text area.
     TextArea & SetText(const std::string & in_text) {
-      Info()->cur_text = in_text;
       Info()->UpdateText(in_text);
       return *this;
     }

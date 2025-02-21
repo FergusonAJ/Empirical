@@ -1,11 +1,11 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016
- *
- *  @file config_setup.hpp
- *  @brief This file provides an example of how to build a configuration class.
- *
+ *  @file
+ *  @brief TODO.
  * To create a new config from scratch, the format is:
  *   EMP_BUILD_CONFIG( CLASS_NAME, OPTIONS... )
  *
@@ -44,6 +44,7 @@ EMP_BUILD_CONFIG( MyConfig,
   VALUE(TEST_STRING_QUOTE, std::string, "\"Quote\"andonemore\"soit'sodd", "This is a string with quote marks."),
   //VALUE(MUTATION_RATE, float, 0.025, "This is my mutation rate.", MUT_RATE),
   VALUE(MUTATION_RATE, float, 0.025, "This is my mutation rate."),
+  ALIAS(MUTATION_RATE_ALIAS),
 )
 
 #endif // #ifndef TESTS_CONFIG_ASSETS_CONFIG_SETUP_HPP_INCLUDE

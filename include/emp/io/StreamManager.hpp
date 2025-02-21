@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2020-2021.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2020-2021.
- *
- *  @file StreamManager.hpp
+ *  @file
  *  @brief The StreamManager object links names to files or other streams.
  *  @note  Status: BETA
  *
@@ -50,7 +51,7 @@ namespace emp {
     public:
       StreamInfo(const std::string & in_name, bool in_owned) : name(in_name), owned(in_owned) { }
       StreamInfo(const StreamInfo &) = delete;
-      virtual ~StreamInfo() {}
+      virtual ~StreamInfo() = default;
 
       virtual Type GetType() const = 0;
       virtual Access GetAccess() const = 0;
@@ -188,7 +189,7 @@ namespace emp {
     }
 
   public:
-    StreamManager() { }
+    StreamManager() = default;
     StreamManager(const StreamManager &) = delete;
     // StreamManager(StreamManager &&) = default;
     ~StreamManager() {

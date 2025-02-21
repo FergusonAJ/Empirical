@@ -8,10 +8,27 @@ if [[ "$(basename -- "$0")" == "enforce_git_status.sh" ]]; then
   exit 1
 fi
 
+if [ "$CI" != "true" ]; then  # bypass check in CI
+# because macos CI mysteriously is having dirty clones
+
 # refuse to continue if uncommitted changes are present
 # adapted from https://stackoverflow.com/a/40535565
-if ! [[ -z $(git status -s) ]];
+if [ -n "$(git status --porcelain)" ];
 then
   ./ci/util/print_uncommitted_changes_warning.sh
   exit 1
 fi
+
+# refuse to continue if gitignored files are present
+# adapted from https://stackoverflow.com/a/467053
+if ! [[ -z $(git check-ignore $(\
+  find -path ./third-party -prune -false -o -type f)) ]];
+then
+  ./ci/util/print_gitignored_files_warning.sh
+  exit 1
+fi
+
+# end CI bypass
+else
+echo "CI detected, bypassing git status check..."
+fi  # if [ "$CI" != "true" ]; then

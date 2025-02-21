@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file commands.hpp
+ *  @file
  *  @brief A set of command-defining classes that can be fed into widgets using the << operator.
  */
 
@@ -16,7 +17,7 @@ namespace emp {
 namespace web {
 
   /// The Close command will prevent the specified widget from accepting further appends
-  /// (and instead revert to trying parents)
+  /// (and instead revert to trying parent widgets)
   class Close : public internal::WidgetCommand {
   private:
     std::string close_id;
@@ -49,8 +50,10 @@ namespace web {
     const std::string & GetStr() const { return str; }
   };
 
+  #ifndef DOXYGEN_SHOULD_SKIP_THIS
   /// Pre-define emp::endl to insert a "<br>" and thus acting like a newline.
   static const PrintStr endl("<br>");
+  #endif // DOXYGEN_SHOULD_SKIP_THIS
 
 }
 }

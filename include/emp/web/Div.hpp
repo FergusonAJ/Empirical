@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Div.hpp
+ *  @file
  *  @brief Div Widgets maintain an ordered collection of other widgets in an HTML div.
  *
  *  When printed to the web page, these internal widgets are presented in order.
@@ -71,6 +72,8 @@ namespace web {
       DivInfo(const DivInfo &) = delete;              // No copies of INFO allowed
       DivInfo & operator=(const DivInfo &) = delete;  // No copies of INFO allowed
       virtual ~DivInfo() {
+        state = Widget::INACTIVE;
+        ClearChildren();                              // Unlink all children.
         for (auto & p : anim_map) delete p.second;    // Delete this document's animations.
       }
 
@@ -183,7 +186,12 @@ namespace web {
           MAIN_THREAD_ASYNC_EM_ASM({
             parent_id = UTF8ToString($0);
             child_id = UTF8ToString($1);
-            $(`#${parent_id}`).append(`<span id="${child_id}"></span>`);
+            let parent = document.getElementById(parent_id);
+            if (parent) {
+              let span = document.createElement('span');
+              span.id = child_id;
+              parent.appendChild(span);
+            }
           }, id.c_str(), in.GetID().c_str());
 
           // Now that the new widget has some place to hook in, activate it!
@@ -266,7 +274,7 @@ namespace web {
         if (scroll_top >= 0.0) {
           MAIN_THREAD_ASYNC_EM_ASM({
               var div_id = UTF8ToString($0);
-              var div_obj = $(`#${div_id}`);
+              var div_obj = document.getElementById(div_id);
               if (div_obj == null) alert(div_id);
               // alert('id=' + div_id + '  top=' + $1 +
               //       '  height=' + div_obj.scrollHeight);
@@ -336,8 +344,8 @@ namespace web {
       return false;
     }
 
-    /// Remove this widget from the current document.
-    void Deactivate(bool top_level) override {
+    /// Remove this widget from the current document (argument is for internal, recursive use only).
+    void Deactivate(bool top_level=true) override {
       // Deactivate children before this node.
       for (auto & child : Info()->m_children) child.Deactivate(false);
       Widget::Deactivate(top_level);
@@ -373,7 +381,7 @@ namespace web {
     web::Animate & Animate (const std::string & in_id) { return *(Info()->anim_map[in_id]); }
   };
 
-  // using Slate = Div;    // For backward compatability...
+  // using Slate = Div;    // For backward compatibility...
 }
 }
 

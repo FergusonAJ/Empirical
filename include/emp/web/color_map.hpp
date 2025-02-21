@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2017
- *
- *  @file color_map.hpp
+ *  @file
  *  @brief Tools to dynamically build (and cache) color maps.
  */
 
@@ -13,6 +14,7 @@
 #include <cmath>
 #include <iomanip>
 #include <map>
+#include <stddef.h>
 #include <string>
 #include <tuple>
 
@@ -107,7 +109,7 @@ namespace emp {
     return ColorRGB(r, g, b);
   }
 
-  /// Generate a vector of color strings with a specified range of hues, and fixed satuation and
+  /// Generate a vector of color strings with a specified range of hues, and fixed saturation and
   /// luminosity,
   const emp::vector<std::string> &
   GetHueMap(size_t map_size, double min_h=0.0, double max_h=360.0, int s=100, int l=50) {
@@ -131,7 +133,7 @@ namespace emp {
     return cur_map;
   }
 
-  /// Generate a vector of color strings providing ranges of all of hue, satuation and luminosity.
+  /// Generate a vector of color strings providing ranges of all of hue, saturation and luminosity.
   emp::vector<std::string>
   GetHSLMap(size_t map_size, double min_h=0.0, double max_h=360.0,
             int min_s=100, int max_s=100,

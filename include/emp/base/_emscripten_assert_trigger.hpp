@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2020-2024.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2020.
- *
- *  @file _emscripten_assert_trigger.hpp
+ *  @file
  *  @brief Assert trigger implementation.
  *  @note For internal use.
  */
@@ -13,11 +14,14 @@
 
 #include <iostream>
 #include <sstream>
+#include <stddef.h>
 #include <string>
 
 #include <emscripten.h>
 
-#include "_is_streamable.hpp"
+#include "concepts.hpp"
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 namespace emp {
 
@@ -32,7 +36,7 @@ namespace emp {
   /// Print out information about the next variable and recurse...
   template <typename T, typename... EXTRA>
   void assert_print(std::stringstream & ss, std::string name, T && val, EXTRA &&... extra) {
-    if constexpr ( emp::is_streamable<std::stringstream, T>::value ) {
+    if constexpr ( emp::is_streamable<T>::value ) {
       ss << name << ": [" << val << "]" << std::endl;
     } else ss << name << ": (non-streamable type)" << std::endl;
     assert_print(ss, std::forward<EXTRA>(extra)...);
@@ -62,5 +66,7 @@ namespace emp {
   }
 
 } // namespace emp
+
+#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 #endif // #ifndef EMP_BASE__EMSCRIPTEN_ASSERT_TRIGGER_HPP_INCLUDE

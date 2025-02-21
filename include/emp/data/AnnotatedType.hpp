@@ -1,10 +1,11 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2021
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2021.
- *
- *  @file AnnotatedType.hpp
- *  @brief A base class to provide a DataMap and accessors to another class.
+ *  @file
+ *  @brief A base class to provide a DataMap and accessors to derived classes.
  *  @note Status: ALPHA
  *
  */
@@ -43,17 +44,25 @@ namespace emp {
 
     size_t GetTraitID(const std::string & name) const { return data_map.GetID(name); }
 
-    template <typename T>
-    T & GetTrait(size_t id) { return data_map.Get<T>(id); }
+    template <typename T, typename KEY_T>
+    auto & GetTrait(KEY_T && key) {
+      return data_map.Get<T>(std::forward<KEY_T>(key));
+    }
 
-    template <typename T>
-    const T & GetTrait(size_t id) const { return data_map.Get<T>(id); }
+    template <typename T, typename KEY_T>
+    auto GetTrait(KEY_T && key, size_t count) {
+      return data_map.Get<T>(std::forward<KEY_T>(key), count);
+    }
 
-    template <typename T>
-    T & GetTrait(const std::string & name) { return data_map.Get<T>(name); }
+    template <typename T, typename KEY_T>
+    const auto & GetTrait(KEY_T && key) const {
+      return data_map.Get<T>(std::forward<KEY_T>(key));
+    }
 
-    template <typename T>
-    const T & GetTrait(const std::string & name) const { return data_map.Get<T>(name); }
+    template <typename T, typename KEY_T>
+    auto GetTrait(KEY_T && key, size_t count) const {
+      return data_map.Get<T>(std::forward<KEY_T>(key), count);
+    }
 
     template <typename T>
     T & SetTrait(size_t id, const T & val) { return data_map.Set<T>(id, val); }
@@ -72,11 +81,10 @@ namespace emp {
 
     std::string GetTraitAsString(size_t id) const { return data_map.GetAsString(id); }
 
-    std::string GetTraitAsString(size_t trait_id, emp::TypeID type_id) const {
-      return data_map.GetAsString(trait_id, type_id);
+    std::string GetTraitAsString(size_t trait_id, emp::TypeID type_id, size_t count=1) const {
+      return data_map.GetAsString(trait_id, type_id, count);
     }
   };
-
 
 }
 

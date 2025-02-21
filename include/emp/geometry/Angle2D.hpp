@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016-2018
- *
- *  @file Angle2D.hpp
+ *  @file
  *  @brief emp::Angle maintains an angle on a 2D surface.
  *
  *  The internal representation uses an int to represent angles.
@@ -15,6 +16,8 @@
 #define EMP_GEOMETRY_ANGLE2D_HPP_INCLUDE
 
 #include <cmath>
+#include <compare>
+#include <cstdint>
 
 #include "../math/constants.hpp"
 
@@ -79,7 +82,7 @@ namespace emp {
 
   class Angle {
   private:
-    uint32_t angle;    // Int representation of an angle
+    uint32_t angle = 0;    // Int representation of an angle
 
     static constexpr double ANGLE_CAP  = 65536.0;
     static constexpr uint32_t UP       = 0;
@@ -88,25 +91,28 @@ namespace emp {
     static constexpr uint32_t LEFT     = 49152;
 
   public:
-    constexpr Angle() : angle(0) { ; }
-    constexpr Angle(const Angle & in_angle) : angle(in_angle.angle) { ; }
+    constexpr Angle() = default;
+    constexpr Angle(const Angle &) = default;
     constexpr Angle(double radians) : angle((uint32_t)(radians * ANGLE_CAP / (2.0*PI))) { ; }
     constexpr Angle(uint32_t in_angle, bool) : angle(in_angle) { ; } // directly set internal value
+
+    Angle & operator=(const Angle &) = default;
+    constexpr auto operator<=>(const Angle &) const = default;
 
     constexpr double AsPortion() const { return ((double) (angle % 0xFFFF)) / ANGLE_CAP; }
     constexpr double AsRadians() const { return ((double) angle) * 2.0 * PI / ANGLE_CAP; }
     constexpr double AsDegrees() const { return ((double) angle) * 360.0 / ANGLE_CAP; }
 
     Angle & SetPortion(double portion) {
-      angle = (uint32_t) (portion * ANGLE_CAP);
+      angle = static_cast<uint32_t>(portion * ANGLE_CAP);
       return *this;
     }
     Angle & SetRadians(double radians) {
-      angle = (uint32_t) (radians * ANGLE_CAP / (2.0 * PI));
+      angle = static_cast<uint32_t>(radians * ANGLE_CAP / (2.0 * PI));
       return *this;
     }
     Angle & SetDegrees(double degrees) {
-      angle = (uint32_t) (degrees * ANGLE_CAP / 360.0);
+      angle = static_cast<uint32_t>(degrees * ANGLE_CAP / 360.0);
       return *this;
     }
     Angle & PointUp()    { angle = UP;    return *this; }
@@ -136,8 +142,6 @@ namespace emp {
       angle += (uint32_t) (degrees * ANGLE_CAP / 360.0);
       return *this;
     }
-
-    Angle & operator=(const Angle & _in) { angle = _in.angle; return *this; }
 
     constexpr bool operator==(const Angle & _in) const { return angle == _in.angle; }
     constexpr bool operator!=(const Angle & _in) const { return angle != _in.angle; }

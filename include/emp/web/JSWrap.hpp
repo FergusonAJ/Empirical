@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2023
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2022.
- *
- *  @file JSWrap.hpp
+ *  @file
  *  @brief Wrap a C++ function and convert it to an integer that can be called from Javascript
  *
  *  To wrap a function, call:
@@ -40,7 +41,9 @@
 #define EMP_WEB_JSWRAP_HPP_INCLUDE
 
 #include <array>
+#include <cstdint>
 #include <functional>
+#include <stddef.h>
 #include <tuple>
 #include <type_traits>
 
@@ -90,11 +93,16 @@ namespace emp {
     }
   }
 
-  template <int ARG_ID> static void LoadArg(std::string & arg_var) {
+  template <int ARG_ID>
+  static void LoadArg(std::string & arg_var) {
     char * tmp_var = (char *) MAIN_THREAD_EM_ASM_INT({
-        return allocate(intArrayFromString(emp_i.cb_args[$0]), 'i8', ALLOC_STACK);
+        var num_bytes = lengthBytesUTF8(emp_i.cb_args[$0]) + 1;
+        var string_on_wasm_heap = _malloc(num_bytes);
+        stringToUTF8(emp_i.cb_args[$0], string_on_wasm_heap, num_bytes);
+        return string_on_wasm_heap;
       }, ARG_ID);
-    arg_var = tmp_var;   // @CAO Do we need to free the memory in tmp_var?
+    arg_var = tmp_var; // Set the specified argument variable
+    free(tmp_var);     // Free the allocated memory
   }
 
   template <int ARG_ID, size_t SIZE, typename T> static void LoadArg(emp::array<T, SIZE> & arg_var){
@@ -168,15 +176,21 @@ namespace emp {
     }, var.c_str());
   }
 
-  template <int ARG_ID> static void LoadArg(std::string & arg_var, std::string var) {
+  template <int ARG_ID>
+  static void LoadArg(std::string & arg_var, std::string var) {
     char * tmp_var = (char *) MAIN_THREAD_EM_ASM_INT({
-      if (emp_i.curr_obj[UTF8ToString($0)] == null){
-        emp_i.curr_obj[UTF8ToString($0)] = "undefined";
-      }
-      return allocate(intArrayFromString(emp_i.curr_obj[UTF8ToString($0)]),
-                   'i8', ALLOC_STACK);
+        var key = UTF8ToString($0);
+        if (emp_i.curr_obj[key] == null) {
+          emp_i.curr_obj[key] = "undefined";
+        }
+        var str = emp_i.curr_obj[key];
+        var num_bytes = lengthBytesUTF8(str) + 1;
+        var string_on_wasm_heap = _malloc(num_bytes);
+        stringToUTF8(str, string_on_wasm_heap, num_bytes);
+        return string_on_wasm_heap;
     }, var.c_str());
-    arg_var = tmp_var;   // Free memory here?
+    arg_var = tmp_var;
+    free(tmp_var); // Free the allocated memory
   }
 
   template <int ARG_ID, typename JSON_TYPE> static
@@ -239,7 +253,7 @@ namespace emp {
   template <typename RETURN_TYPE>
   static emp::sfinae_decoy<void, decltype(&RETURN_TYPE::StoreAsReturn)>
   StoreReturn(const RETURN_TYPE & ret_var) {
-    ret_var.template StoreAsReturn();
+    ret_var.template StoreAsReturn<RETURN_TYPE>();
   }
 
   /// Helper functions to store values inside JSON objects

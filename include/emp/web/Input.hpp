@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2018
- *
- *  @file Input.hpp
+ *  @file
  *  @brief Create/control an HTML input and call a specified function when it receives input.
  *
  *  Use example:
@@ -21,7 +22,7 @@
  *    Input & Autofocus(bool in_af)
  *    Input & Disabled(bool in_dis)
  *
- *  Retriving current state:
+ *  Retrieving current state:
  *    const std::string & GetLabel() const
  *    bool HasAutofocus() const
  *    bool IsDisabled() const
@@ -30,6 +31,7 @@
 #ifndef EMP_WEB_INPUT_HPP_INCLUDE
 #define EMP_WEB_INPUT_HPP_INCLUDE
 
+#include <cstdint>
 
 #include "Widget.hpp"
 
@@ -129,6 +131,7 @@ namespace web {
             function modifyInputs() {
 
                 var input_el = document.getElementById(UTF8ToString($0));
+                if (!input_el) return;
                 input_el.addEventListener("input", modifyOffset);
                 // the following taken from http://stackoverflow.com/questions/2856513/trigger-onchange-event-manually
                 if ("fireEvent" in input_el) {

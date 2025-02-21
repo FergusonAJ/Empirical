@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2020
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2020
- *
- *  @file NodeDomShim.hpp
+ *  @file
  *  @brief Shim for Empirical compatibility with node.js. Mimicks the browser
  *  document object model (DOM).
  */
@@ -30,13 +31,6 @@ namespace web {
       var JSDOM = jsdom.JSDOM;
 
       global.dom = (new JSDOM(`<div id="emp_base"></div>`));
-
-      // setup jquery
-      var jquery = require('jquery');
-      global.$ = jquery( dom.window );
-
-      global.window = dom.window;
-      global.document = dom.window.document;
 
       // shim for alert
       global.alert = console.log;

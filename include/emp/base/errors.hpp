@@ -1,25 +1,26 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016-2018
- *
- *  @file errors.hpp
+ *  @file
  *  @brief Tools to help manage various problems in command-line or Emscripten-based applications.
  *  @note Status: ALPHA
  *
- *  There are three possible recipiants for all errors/warnings.
+ *  There are three possible recipients for all errors/warnings.
  *  - The end-user if the problem stems from inputs they provided to the executable.
  *  - The library user if the problem is due to mis-use of library functionality.
  *  - The library developers if something that should be impossible occurs.
  *
- *  There are also three types of problmes to notify about:
+ *  There are also three types of problems to notify about:
  *  - Warnings if something looks suspicious, but isn't technically a problem.
  *  - Errors if something has gone so horribly wrong that it is impossible to recover from.
  *  - Exceptions if something didn't go the way we expected, but we can still recover.
  *
  *  In general, most of the content of this file is targeted at providing useful tools for library
  *  users; end-users should receive more customized messages and asserts should capture
- *  suposedly "impossible" situations that none-the-less occur in the library itself.
+ *  supposedly "impossible" situations that none-the-less occur in the library itself.
  *
  *  NOTES:
  *  - Whenever possible, exceptions should be preferred.  They are more specific than warnings,
@@ -42,9 +43,10 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <stddef.h>
 #include <string>
 
-/// If we are in emscripten, make sure to include the header.
+// If we are in emscripten, make sure to include the header.
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif

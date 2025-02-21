@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2021-2024.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2021
- *
- *  @file DFA.cpp
+ *  @file
  */
 
 #include <iostream>
@@ -15,7 +16,8 @@
 
 TEST_CASE("Test DFA", "[compiler]")
 {
-  emp::DFA dfa(5);
+  emp::DFA dfa;
+  dfa.Resize(5);
   dfa.SetTransition(0, 4, 'a');
   dfa.SetTransition(4, 3, 'b');
   dfa.SetTransition(3, 2, 'a');
@@ -68,7 +70,8 @@ TEST_CASE("Test DFA", "[compiler]")
 
 TEST_CASE("Another Test DFA", "[compiler]")
 {
-  emp::DFA dfa(10);
+  emp::DFA dfa;
+  dfa.Resize(10);
   dfa.SetTransition(0, 1, 'a');
   dfa.SetTransition(1, 2, 'a');
   dfa.SetTransition(2, 0, 'a');

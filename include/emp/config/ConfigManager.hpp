@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2016
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2016
- *
- *  @file ConfigManager.hpp
+ *  @file
  *  @brief  The ConfigManager templated class handles the building and configuration of new objects
  *  of the target type.
  *
@@ -42,7 +43,7 @@ namespace emp {
   public:
     ConfigManager_Base(const std::string & _type, const std::string & _command)
       : type_keyword(_type), command_keyword(_command) { ; }
-    virtual ~ConfigManager_Base() { ; }
+    virtual ~ConfigManager_Base() = default;
 
     const std::string & GetTypeKeyword() const { return type_keyword; }
     const std::string & GetCommandKeyword() const { return command_keyword; }
@@ -66,7 +67,7 @@ namespace emp {
       , callback_fun(_fun)
     {
     }
-    ~ConfigManager() { ; }
+    ~ConfigManager() = default;
 
     bool HasObject(const std::string & obj_name) {
       return (name_map.find(obj_name) != name_map.end());

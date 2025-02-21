@@ -1,11 +1,12 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2021.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2021.
- *
- *  @file Random.hpp
+ *  @file
  *  @brief A versatile and non-patterned pseudo-random-number generator.
- *  @note Status: RELEASE
+ *  Status: RELEASE
  */
 
 #ifndef EMP_MATH_RANDOM_HPP_INCLUDE
@@ -13,9 +14,11 @@
 
 #include <climits>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <iterator>
+#include <stddef.h>
 
 #include "../base/assert.hpp"
 #include "../base/Ptr.hpp"
@@ -24,7 +27,9 @@
 #include "Range.hpp"
 
 namespace emp {
+  #ifndef DOXYGEN_SHOULD_SKIP_THIS
   using namespace emp;
+  #endif // DOXYGEN_SHOULD_SKIP_THIS
 
   ///  Middle Square Weyl Sequence: A versatile and non-patterned pseudo-random-number
   ///  generator.
@@ -88,6 +93,10 @@ namespace emp {
 
       weyl_state *= 2;  // Make sure starting state is even.
 
+      // Reset other internal state
+      value = 0;
+      expRV = 0.0;
+
       Get(); // Prime the new sequence by skipping the first number.
     }
 
@@ -108,7 +117,14 @@ namespace emp {
     /// @return A pseudo-random double in the provided range.
     inline double GetDouble(const Range<double> range) noexcept {
       return GetDouble(range.GetLower(), range.GetUpper());
-     }
+    }
+
+    /// @return A pseudo-random double value between (0.0, 1.0]
+    inline double GetDoubleNonZero() noexcept {
+      double d = Get() / (double) RAND_CAP;
+      while(d == 0.0) {d = Get() / (double) RAND_CAP;}
+      return d;
+    }
 
 
     /// @return A pseudo-random 32-bit (4 byte) unsigned int value.
@@ -385,10 +401,10 @@ namespace emp {
       // Using Rejection Method and saving of initial exponential random variable
       double expRV2;
       while (1) {
-        expRV2 = -log(GetDouble());
+        expRV2 = -log(GetDoubleNonZero());
         expRV -= (expRV2-1)*(expRV2-1)/2;
         if (expRV > 0) break;
-        expRV = -log(GetDouble());
+        expRV = -log(GetDoubleNonZero());
       }
       if (P(.5)) return expRV2;
       return -expRV2;
@@ -438,19 +454,15 @@ namespace emp {
 
     /// Generate a random variable drawn from an exponential distribution.
     inline double GetExponential(double p) {
-      emp_assert(p >= 0.0 && p <= 1.0, p);
-      if (p == 0) {
-        return std::numeric_limits<uint32_t>::infinity();
-      }
+      emp_assert(p > 0.0 && p <= 1.0, p);
+      // if (p == 0.0) return std::numeric_limits<double>::infinity();
+      if (p == 1.0) return 0.0;
       return std::log(GetDouble()) / std::log(1.0 - p);
     }
 
     /// Generate a random variable drawn from a geometric distribution.
     inline uint32_t GetGeometric(double p) {
-      emp_assert(p >= 0.0 && p <= 1.0, p);
-      if (p == 0) {
-        return std::numeric_limits<uint32_t>::infinity();
-      }
+      emp_assert(p > 0.0 && p <= 1.0, p);
       return static_cast<uint32_t>( GetExponential(p) ) + 1;
     }
 

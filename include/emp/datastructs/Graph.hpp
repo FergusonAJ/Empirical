@@ -1,10 +1,11 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2017
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2017
- *
- *  @file Graph.hpp
- *  @brief A simple, fast class for managing verticies (nodes) and edges.
+ *  @file
+ *  @brief A simple, fast class for managing vertices (nodes) and edges.
  *  @note Status: BETA
  */
 
@@ -12,6 +13,7 @@
 #define EMP_DATASTRUCTS_GRAPH_HPP_INCLUDE
 
 #include <iostream>
+#include <stddef.h>
 
 #include "../base/assert.hpp"
 #include "../base/vector.hpp"
@@ -22,6 +24,7 @@ namespace emp {
   /// A graph class that maintains a set of vertices (nodes) and edges (connecting pairs of nodes)
   class Graph {
   public:
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
     /// Information about nodes within a graph.
     class Node {
     private:
@@ -29,7 +32,8 @@ namespace emp {
       std::string label;
     public:
       Node(size_t num_nodes) : edge_set(num_nodes), label("") { ; }
-      Node(const Node & in_node) : edge_set(in_node.edge_set), label(in_node.label) { ; }
+      Node(const Node & in_node) = default;
+      Node(Node && in_node) = default;
       ~Node() { ; }
 
       /// Set this node to have the same connections as another node.
@@ -74,6 +78,7 @@ namespace emp {
       }
 
     };
+    #endif // DOXYGEN_SHOULD_SKIP_THIS
 
   protected:
     emp::vector<Node> nodes;  ///< Set of vertices in this graph.
@@ -188,7 +193,7 @@ namespace emp {
       return nodes[from].HasEdge(to) && nodes[to].HasEdge(from);
     }
 
-    /// Add a pair of edges between two vertieces (in both directions)
+    /// Add a pair of edges between two vertices (in both directions)
     void AddEdgePair(size_t from, size_t to) {
       emp_assert(from < nodes.size() && to < nodes.size());
       nodes[from].AddEdge(to);

@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2015-2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2015-2018
- *
- *  @file Canvas.hpp
+ *  @file
  *  @brief Manage an HTML canvas object.
  *
  */
@@ -75,7 +76,7 @@ namespace web {
         EM_ASM({
           var cname = UTF8ToString($0);
           var canvas = document.getElementById(cname);
-          emp_i.ctx = canvas.getContext('2d');
+          if (canvas) emp_i.ctx = canvas.getContext('2d');
         }, id.c_str());
         #endif
       }

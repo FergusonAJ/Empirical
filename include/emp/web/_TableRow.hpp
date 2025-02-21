@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2017-2024.
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2017-2018.
- *
- *  @file _TableRow.hpp
+ *  @file
  *  @brief The TableRow widget, which behaves like the Table widget, but focuses on a single row.
  *
  *  DO NOT include this file directly.  All files begining with '_' are for internal use only.
@@ -12,6 +13,8 @@
 #ifndef EMP_WEB__TABLEROW_HPP_INCLUDE
 #define EMP_WEB__TABLEROW_HPP_INCLUDE
 
+#include <stddef.h>
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 namespace emp {
@@ -19,11 +22,19 @@ namespace web {
 
   /// An object that focuses on a single column in a specified table.
   class TableRow : public TableWidget {
+  private:
+    size_t row_id = 0;
   public:
-    TableRow(size_t r, size_t c, const std::string & in_id="") : TableWidget(r,c,in_id) { ; }
+    TableRow(size_t r, size_t c, const std::string & in_id="") : TableWidget(r,c,in_id), row_id(r) { ; }
+    TableRow(const TableRow &) = default;
     TableRow(const TableWidget & in) : TableWidget(in) { ; }
     TableRow(const Widget & in) : TableWidget(in) { ; }
-    TableRow(internal::TableInfo * in_info, size_t _row=0) : TableWidget(in_info, _row, 0) { ; }
+    TableRow(internal::TableInfo * in_info, size_t _row=0) : TableWidget(in_info, _row, 0), row_id(_row) { ; }
+
+    TableRow & operator=(const TableRow &) = default;
+
+    TableCell GetCell(size_t col_id) const { return TableWidget::GetCell(row_id, col_id); }
+    TableCell operator[](size_t col_id) const { return GetCell(col_id); }
 
     // Apply CSS to appropriate component based on current state.
     void DoCSS(const std::string & setting, const std::string & value) override {

@@ -1,9 +1,10 @@
+/*
+ *  This file is part of Empirical, https://github.com/devosoft/Empirical
+ *  Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
+ *  date: 2018
+*/
 /**
- *  @note This file is part of Empirical, https://github.com/devosoft/Empirical
- *  @copyright Copyright (C) Michigan State University, MIT Software license; see doc/LICENSE.md
- *  @date 2018
- *
- *  @file Resource.hpp
+ *  @file
  *  @brief Implement resource-based selection.
  *
  *
@@ -15,6 +16,7 @@
 #ifndef EMP_EVOLVE_RESOURCE_HPP_INCLUDE
 #define EMP_EVOLVE_RESOURCE_HPP_INCLUDE
 
+#include <stddef.h>
 
 #include "World.hpp"
 
@@ -22,9 +24,9 @@ namespace emp {
 
   class Resource {
   private:
-    double amount = 0;
-    double inflow = 0;
-    double outflow = 0;
+    double amount = 0.0;
+    double inflow = 0.0;
+    double outflow = 0.0;
 
   public:
 
@@ -32,16 +34,16 @@ namespace emp {
     Resource(double amt, double in, double out) :
       amount(amt), inflow(in), outflow(out){};
 
-    double GetAmount() {return amount;}
-    double GetInflow() {return inflow;}
-    double GetOutflow() {return outflow;}
+    [[nodiscard]] double GetAmount() const { return amount; }
+    [[nodiscard]] double GetInflow() const { return inflow; }
+    [[nodiscard]] double GetOutflow() const { return outflow; }
 
-    void SetAmount(double amt) {amount = amt;}
-    void SetInflow(double in) {inflow = in;}
-    void SetOutflow(double out) {outflow = out;}
+    void SetAmount(double amt) { amount = amt; }
+    void SetInflow(double in) { inflow = in; }
+    void SetOutflow(double out) { outflow = out; }
 
-    double Inc() {amount += inflow; return amount;}
-    double Inc(double amt) {amount += amt; return amount;}
+    double Inc() { amount += inflow; return amount; }
+    double Inc(double amt) { amount += amt; return amount; }
     double Dec() {
       amount -= amount*outflow;
       if (amount < 0) {amount = 0;}

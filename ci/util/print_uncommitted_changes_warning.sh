@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+git status --ignored
+git diff
+
 # adapted from https://stackoverflow.com/a/835561
 # and https://stackoverflow.com/a/4327720
 echo "========================================================================="
@@ -13,7 +16,7 @@ echo
 echo "or"
 echo
 echo "2. stash your changes (including untracked files)"
-echo "   -> hint: git stash --include-untracked"
+echo "   -> hint: git stash --all"
 echo "   -> hint (to recover your stashed changes later): git stash pop"
 echo
 echo "or"
