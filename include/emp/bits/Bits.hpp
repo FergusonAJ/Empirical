@@ -1515,8 +1515,8 @@ namespace emp {
   Bits<DATA_T,ZERO_LEFT> & Bits<DATA_T,ZERO_LEFT>::Set(emp::String str) {
     if (str.size() == 0) return *this;
 
-    Clear();
     if (str.PopIf('{')) {
+      Clear();
       while (str.PopIf(' ')); // Remove leading whitespace.
       while (str.size() && str.HasDigitAt(0)) {
         auto pos = str.PopUnsigned();
@@ -1528,6 +1528,7 @@ namespace emp {
       if (_data.IsFixedSize() == false) {
         _data.RawResize( CountBits(str) );
       }
+      Clear();
 
       size_t pos = 0;
       for (char c : str) {
