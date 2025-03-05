@@ -55,7 +55,7 @@ namespace emp {
   /// Does a type have a ToString() member function?
   template <typename OBJ_T>
   concept hasToString = requires(OBJ_T value) {
-    { value.ToString() } -> std::same_as<std::string>;
+    { value.ToString() } -> std::convertible_to<std::string>;
   };
 
   /// Does a type have a ToDouble() member function?
