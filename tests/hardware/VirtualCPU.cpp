@@ -1587,12 +1587,12 @@ TEST_CASE("VirtualCPU_String_Methods", "[Hardware]") {
     emp::vector<std::string> string_vec;
     std::string output_str = ostr.str();
     emp::slice(ostr.str(), string_vec, '\n');
-    CHECK(string_vec.size() == 5);
+    CHECK(string_vec.size() == 9);
     CHECK(string_vec[0] == "IP: 0 RH: 0 WH: 0 FH: 0(nops: 4; regs: 4)");
-    CHECK(string_vec[1] == "[0] 0");
-    CHECK(string_vec[2] == "[1] 1");
-    CHECK(string_vec[3] == "[2] 2");
-    CHECK(string_vec[4] == "[3] 3");
+    CHECK(string_vec[1] == "Reg 0: 0");
+    CHECK(string_vec[2] == "Reg 1: 1");
+    CHECK(string_vec[3] == "Reg 2: 2");
+    CHECK(string_vec[4] == "Reg 3: 3");
   /*
     [X] GetWorkingGenomeString returns a string representation of the working genome
     [X] GetGenomeString returns a string representation of the (non-working) genome
